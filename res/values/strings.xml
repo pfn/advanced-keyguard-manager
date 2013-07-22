@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Bluetooth Keyguard</string>
+    <string name="unlock_instructions">
+        Select the paired bluetooth devices that will
+        disable the pattern lock screen when connected
+    </string>
+    <string name="toast_change_config_notice">
+        Any changed unlock device will take effect upon its next connection
+    </string>
+    <string name="no_devices_selected">
+        No devices selected
+    </string>
+    <string name="no_paired_devices">
+        No bluetooth devices have been paired
+    </string>
+    <string name="keyguard_enabled">
+        %s disconnected, enabling pattern lock
+    </string>
+    <string name="keyguard_disabled">
+        %s connected, disabling pattern lock
+    </string>
+    <string name="disable_keyguard_label">
+        Disable keyguard when a configured device is connected
+    </string>
+</resources>
