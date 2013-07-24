@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:padding="@dimen/frame_padding"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+    <LinearLayout
+            android:id="@+id/devices_container"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        <CheckBox
+                android:id="@+id/enable_clear_keyguard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/disable_keyguard_bt_label"/>
+
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/standard_margin"
+                android:gravity="left"
+                android:text="@string/bt_unlock_instructions" />
+
+        <ListView
+                android:id="@+id/paired_devices_list"
+                android:layout_height="0dp"
+                android:layout_width="match_parent"
+                android:layout_weight="1"
+                android:layout_marginTop="@dimen/standard_margin"
+                android:choiceMode="multipleChoice"
+                android:textFilterEnabled="true" />
+    </LinearLayout>
+    <LinearLayout
+            android:id="@+id/no_devices_container"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="bottom|center"
+                android:text="@string/no_paired_devices"/>
+        <Button
+                android:id="@+id/pair_device"
+                android:layout_marginTop="@dimen/standard_margin"
+                android:layout_width="@dimen/button_width"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/pair"/>
+        <View
+                android:layout_height="0dp"
+                android:layout_width="wrap_content"
+                android:layout_weight="1"
+                />
+    </LinearLayout>
+    <LinearLayout
+            android:id="@+id/bluetooth_disabled_container"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="bottom|center"
+                android:text="@string/bluetooth_disabled"/>
+        <Button
+                android:id="@+id/enable_bluetooth"
+                android:layout_marginTop="@dimen/standard_margin"
+                android:layout_width="@dimen/button_width"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/enable"/>
+        <View
+                android:layout_height="0dp"
+                android:layout_width="wrap_content"
+                android:layout_weight="1"
+                />
+    </LinearLayout>
+    <TextView
+            android:visibility="gone"
+            android:id="@+id/no_adapter_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="@string/no_bluetooth_adapter"/>
+</FrameLayout>

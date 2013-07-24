@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Bluetooth Keyguard</string>
-    <string name="unlock_instructions">
+    <string name="pair">Pair</string>
+    <string name="bt_unlock_instructions">
         Select the paired bluetooth devices that will
+        disable the pattern lock screen when connected
+    </string>
+    <string name="wifi_unlock_instructions">
+        Select the configured wifi networks that will
         disable the pattern lock screen when connected
     </string>
     <string name="toast_change_config_notice">
@@ -20,7 +25,56 @@
     <string name="keyguard_disabled">
         %s connected, disabling pattern lock
     </string>
-    <string name="disable_keyguard_label">
-        Disable keyguard when a configured device is connected
+
+    <string name="disable_keyguard_bt_label">
+        Disable keyguard when a selected bluetooth device is connected
     </string>
+    <string name="disable_keyguard_wifi_label">
+        Disable keyguard when a selected wifi network is connected
+    </string>
+    <string name="device_manager_description">
+        Keyguard management administrator. This controls the keyguard appearance
+        based on wifi and bluetooth connections currently active. Unlock
+        attempts are monitored to protect against incorrectly changing the PIN
+        or password.
+    </string>
+    <string name="notif_passwd_changed_title">
+        Screen lock password changed</string>
+    <string name="notif_passwd_changed_text">
+        Keyguard unlocker has been disabled, password cleared</string>
+
+    <string name="no_bluetooth_adapter">This device does not support bluetooth</string>
+    <string name="no_networks">No Wi-Fi networks have been configured</string>
+    <string name="add_network">Add Network</string>
+    <string name="device_management">Device Management</string>
+    <string name="device_admin_status">Device administrator status</string>
+    <string name="enable">Enable</string>
+    <string name="another_admin_warning">Warning: a different device
+        administrator is enabled on this device and can prevent the keyguard
+        unlocker from working
+    </string>
+    <string name="overview">Overview</string>
+    <string name="wifi">Wi-Fi</string>
+    <string name="bluetooth">Bluetooth</string>
+    <string name="off">Off</string>
+    <string name="on">On</string>
+    <string name="status">Status</string>
+    <string name="enabled">Enabled</string>
+    <string name="disabled">Disabled</string>
+    <string name="keyguard_status">Lock screen security</string>
+    <string name="set_password">Set Password</string>
+    <string name="admin_add_explanation">Necessary administrative permissions to
+        set and remove the pin/password lock on the lock screen
+    </string>
+    <string name="pin">PIN</string>
+    <string name="password">Password</string>
+    <string name="pin_password_status">PIN or Password status</string>
+    <string name="unset">Unset</string>
+    <string name="verify_password">You must verify your current PIN or password
+        before continuing
+    </string>
+    <string name="disabled_admin_warning">Keyguard unlocker will not function
+        unless device administrator is active
+    </string>
+    <string name="bluetooth_disabled">Bluetooth is not enabled</string>
 </resources>

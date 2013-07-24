@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="standard_margin" type="dimen">4dp</item>
+    <item name="frame_padding" type="dimen">8dp</item>
+    <item name="button_width" type="dimen">150dp</item>
+</resources>

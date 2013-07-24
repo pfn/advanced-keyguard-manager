@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:padding="@dimen/frame_padding"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+    <LinearLayout
+            android:id="@+id/devices_container"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        <CheckBox
+                android:id="@+id/enable_clear_keyguard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/disable_keyguard_wifi_label"/>
+
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/standard_margin"
+                android:gravity="left"
+                android:text="@string/wifi_unlock_instructions" />
+
+        <ListView
+                android:id="@+id/paired_devices_list"
+                android:layout_height="0dp"
+                android:layout_width="match_parent"
+                android:layout_weight="1"
+                android:layout_marginTop="@dimen/standard_margin"
+                android:choiceMode="multipleChoice"
+                android:textFilterEnabled="true" />
+    </LinearLayout>
+    <LinearLayout
+            android:id="@+id/no_networks_container"
+            android:orientation="vertical"
+            android:layout_gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:gravity="bottom|center"
+                android:layout_weight="1"
+                android:text="@string/no_networks"/>
+        <Button
+                android:id="@+id/add_network"
+                android:layout_marginTop="@dimen/standard_margin"
+                android:layout_width="@dimen/button_width"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/add_network"/>
+        <View
+                android:layout_height="0dp"
+                android:layout_width="wrap_content"
+                android:layout_weight="1"
+                />
+    </LinearLayout>
+</FrameLayout>
