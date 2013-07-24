@@ -98,7 +98,7 @@
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_gravity="center"
-                android:text="@string/keyguard_status"
+                android:text="@string/lockscreen_status"
                 />
         <TextView
                 android:id="@+id/lockscreen_status"
@@ -110,4 +110,39 @@
                 android:text="@string/enabled"
                 />
     </LinearLayout>
+    <LinearLayout
+            android:layout_marginTop="@dimen/standard_margin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+        <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_gravity="center"
+                android:text="@string/keyguard_status"
+                />
+        <TextView
+                android:id="@+id/keyguard_status"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:gravity="right"
+                android:textStyle="bold"
+                android:layout_gravity="center"
+                android:text="@string/enabled"
+                />
+    </LinearLayout>
+    <View android:layout_width="match_parent"
+          android:layout_height="0dp"
+          android:layout_weight="1"
+          />
+    <TextView
+            android:id="@+id/press_menu_for_more"
+            android:visibility="invisible"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="@string/press_menu_for_more"/>
 </LinearLayout>

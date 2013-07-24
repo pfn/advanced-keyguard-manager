@@ -16,6 +16,7 @@ public class KeyguardService extends Service {
     }
 
     @Override
+    @SuppressWarnings("deprecated")
     public void onCreate() {
         super.onCreate();
         

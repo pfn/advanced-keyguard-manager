@@ -1,11 +1,15 @@
 package com.hanhuy.android.bluetooth.keyguard;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
@@ -15,6 +19,8 @@ import java.util.List;
 import java.util.Set;
 
 public class KeyguardMediator {
+    public final static int NOTIFICATION_RESET = 1;
+    public final static int NOTIFICATION_TOGGLE = 2;
     public final static String ACTION_STATE_CHANGED =
             "com.hanhuy.android.bluetooth.keyguard.KGM_STATE_CHANGE";
     private final static String TAG = "KeyguardMediator";
@@ -38,26 +44,47 @@ public class KeyguardMediator {
 
     public void notifyStateChanged() {
         boolean disabled = settings.get(Settings.LOCK_DISABLED);
-        boolean newState = isSecurityEnabled();
-        if (disabled != newState) {
+        boolean newState = !isSecurityEnabled();
 
-            Log.v(TAG, "toggling lock screen state: " + newState);
-            ctx.sendBroadcast(new Intent(ACTION_STATE_CHANGED));
+        if (!dpm.isAdminActive(new ComponentName(ctx, AdminReceiver.class))) {
+            Log.v(TAG, "device administrator is not active");
+            return;
+        }
+
+        if (disabled != newState && CryptoUtils.isPasswordSaved(ctx)) {
+
+            Log.v(TAG, "toggling lock screen state: " + !newState);
             settings.set(Settings.LOCK_DISABLED, newState);
             updatePasswordSetTime();
-            dpm.resetPassword(disabled ? "" : CryptoUtils.getPassword(ctx), 0);
+
+            dpm.resetPassword(newState ? "" : CryptoUtils.getPassword(ctx), 0);
+
+            PendingIntent pending = PendingIntent.getActivity(
+                    ctx, 0, new Intent(ctx, MainActivity.class), 0);
+            String text = ctx.getString(newState ?
+                    R.string.lockscreen_disabled :
+                    R.string.lockscreen_enabled);
+            Notification n = new NotificationCompat.Builder(ctx)
+                    .setAutoCancel(true)
+                    .setTicker(text)
+                    .setSmallIcon(R.drawable.ic_lock)
+                    .setContentIntent(pending)
+                    .setContentTitle(ctx.getString(R.string.app_name))
+                    .setContentText(text)
+                    .build();
+            NotificationManager nm =
+                    (NotificationManager) ctx.getSystemService(
+                            Context.NOTIFICATION_SERVICE);
+            nm.notify(KeyguardMediator.NOTIFICATION_TOGGLE, n);
+            ctx.sendBroadcast(new Intent(ACTION_STATE_CHANGED));
         }
     }
 
     public boolean isSecurityEnabled() {
         boolean disableKG = false;
-        if (!dpm.isAdminActive(new ComponentName(ctx, AdminReceiver.class))) {
-            Log.v(TAG, "device administrator is not active");
-            return !disableKG;
-        }
 
         if (!CryptoUtils.isPasswordSaved(ctx)) {
-            Log.v(TAG, "password and/or hmac not set properly");
+            Log.v(TAG, "password and/or hmac not set [properly]");
             return !disableKG;
         }
 

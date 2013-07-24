@@ -27,6 +27,8 @@
     <string name="notif_passwd_changed_text">
         Keyguard unlocker has been disabled, reset your password</string>
 
+    <string name="lockscreen_disabled">Lock screen security disabled</string>
+    <string name="lockscreen_enabled">Lock screen security enabled</string>
     <string name="no_bluetooth_adapter">This device does not support bluetooth</string>
     <string name="no_networks">No Wi-Fi networks have been configured</string>
     <string name="add_network">Add Network</string>
@@ -46,7 +48,8 @@
     <string name="enabled">Enabled</string>
     <string name="bypassed">Bypassed</string>
     <string name="disabled">Disabled</string>
-    <string name="keyguard_status">Lock screen security</string>
+    <string name="lockscreen_status">Lock screen security</string>
+    <string name="keyguard_status">Keyguard status</string>
     <string name="set_password">Set Password</string>
     <string name="admin_add_explanation">Administrative permissions necessary
         to set and bypass the pin/password lock on the keyguard
@@ -75,4 +78,5 @@
     <string name="admin_disable_warning">Your screen will no longer unlock
         automatically if disabled
     </string>
+    <string name="press_menu_for_more">Press menu for more options</string>
 </resources>

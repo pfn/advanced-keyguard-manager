@@ -3,11 +3,13 @@ package com.hanhuy.android.bluetooth.keyguard;
 import android.app.admin.DeviceAdminInfo;
 import android.app.admin.DevicePolicyManager;
 import android.content.*;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.TextView;
@@ -25,6 +27,7 @@ public class OverviewFragment extends Fragment {
     private TextView pinPasswordStatus;
     private View warning;
     private View disabledWarning;
+    private TextView keyguardStatus;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup c, Bundle s) {
@@ -37,9 +40,14 @@ public class OverviewFragment extends Fragment {
         toggle = (CompoundButton) v.findViewById(R.id.toggle_admin);
         lockscreenStatus = (TextView) v.findViewById(R.id.lockscreen_status);
         pinPasswordStatus = (TextView) v.findViewById(R.id.pin_password_status);
+        keyguardStatus = (TextView) v.findViewById(R.id.keyguard_status);
         warning = v.findViewById(R.id.warning);
         disabledWarning = v.findViewById(R.id.disabled_warning);
 
+        if (hasPermanentMenuKey()) {
+            v.findViewById(
+                    R.id.press_menu_for_more).setVisibility(View.VISIBLE);
+        }
         toggle.setOnCheckedChangeListener(
                 new CompoundButton.OnCheckedChangeListener() {
                     @Override
@@ -47,6 +55,13 @@ public class OverviewFragment extends Fragment {
                         Intent addAdmin = new Intent(
                                 DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
                         if (!b) {
+                            Context ctx = getActivity();
+                            if (settings.get(Settings.LOCK_DISABLED) &&
+                                    CryptoUtils.isPasswordSaved(ctx)) {
+                                dpm.resetPassword(
+                                        CryptoUtils.getPassword(ctx), 0);
+                                settings.set(Settings.LOCK_DISABLED, false);
+                            }
                             dpm.removeActiveAdmin(cn);
                             disabledWarning.setVisibility(View.VISIBLE);
                             warning.setVisibility(View.GONE);
@@ -106,19 +121,23 @@ public class OverviewFragment extends Fragment {
             pinPasswordStatus.setText(R.string.unset);
             pinPasswordStatus.setTextColor(0xffff0000);
         } else {
-            String password = CryptoUtils.decrypt(encrypted);
             boolean isPIN = CryptoUtils.isPIN(getActivity());
-
             pinPasswordStatus.setText(isPIN ? R.string.pin : R.string.password);
             pinPasswordStatus.setTextColor(0xff00aa00);
 
         }
         KeyguardMediator kgm = KeyguardMediator.getInstance(getActivity());
+        boolean isSecure = kgm.isSecurityEnabled() || !dpm.isAdminActive(cn);
 
-        lockscreenStatus.setText(kgm.isSecurityEnabled() ?
+        lockscreenStatus.setText(isSecure ?
                 R.string.enabled : R.string.bypassed);
         lockscreenStatus.setTextColor(
-                kgm.isSecurityEnabled() ? 0xff00aa00 : 0xff770000);
+                isSecure ? 0xff00aa00 : 0xff770000);
+
+        keyguardStatus.setText(true ?
+            R.string.enabled : R.string.bypassed);
+        keyguardStatus.setTextColor(
+                true ? 0xff00aa00 : 0xff770000);
     }
 
     private boolean areOtherAdminsSet() {
@@ -130,5 +149,16 @@ public class OverviewFragment extends Fragment {
                         c, DeviceAdminInfo.USES_POLICY_LIMIT_PASSWORD);
             }
         }).isPresent();
+    }
+    private boolean hasPermanentMenuKey() {
+        int version = Build.VERSION.SDK_INT;
+        if (version < Build.VERSION_CODES.HONEYCOMB) {
+            return true;
+        } else if (version >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            return ViewConfiguration.get(getActivity()).hasPermanentMenuKey();
+        } else {
+            // must be honeycomb
+            return false;
+        }
     }
 }

@@ -1,9 +1,8 @@
 package com.hanhuy.android.bluetooth.keyguard;
 
+import android.app.NotificationManager;
 import android.app.admin.DevicePolicyManager;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
+import android.content.*;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -58,13 +57,33 @@ public class MainActivity extends SherlockFragmentActivity {
         }
     }
 
+    private BroadcastReceiver keyguardReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (hasWindowFocus()) {
+                NotificationManager nm = (NotificationManager) getSystemService(
+                        Context.NOTIFICATION_SERVICE);
+                nm.cancel(KeyguardMediator.NOTIFICATION_TOGGLE);
+            }
+        }
+    };
     @Override
     protected void onResume() {
         super.onResume();
 
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(KeyguardMediator.ACTION_STATE_CHANGED);
+        registerReceiver(keyguardReceiver, filter);
+
         // yuck, but it seems there's no other way to toggle menu items after
         // enabling device admin
         supportInvalidateOptionsMenu();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(keyguardReceiver);
     }
 
     @Override

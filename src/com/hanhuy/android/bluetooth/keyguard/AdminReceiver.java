@@ -29,6 +29,8 @@ public class AdminReceiver extends DeviceAdminReceiver{
     public void onDisabled(Context context, Intent intent) {
         Log.v(TAG, "Disabled");
         KeyguardMediator.getInstance(context).notifyStateChanged();
+        Settings s = Settings.getInstance(context);
+        s.set(Settings.LOCK_DISABLED, false);
     }
 
     @Override
@@ -47,13 +49,16 @@ public class AdminReceiver extends DeviceAdminReceiver{
                             c.getString(R.string.notif_passwd_changed_title))
                     .setContentText(
                             c.getString(R.string.notif_passwd_changed_text))
+                    .setTicker(
+                            c.getString(R.string.notif_passwd_changed_text))
                     .build();
             s.set(Settings.PASSWORD, null);
             s.set(Settings.PASSWORD_HASH, null);
+            s.set(Settings.LOCK_DISABLED, false);
             NotificationManager nm =
                     (NotificationManager) c.getSystemService(
                             Context.NOTIFICATION_SERVICE);
-            nm.notify(1, n);
+            nm.notify(KeyguardMediator.NOTIFICATION_RESET, n);
             kgm.notifyStateChanged();
         }
     }
