@@ -18,11 +18,14 @@ import android.view.ViewGroup;
 import android.widget.*;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 public class WifiFragment extends Fragment {
     private final static String TAG = "WifiFragment";
@@ -46,6 +49,9 @@ public class WifiFragment extends Fragment {
                     @Override
                     public void onCheckedChanged(CompoundButton c, boolean b) {
                         settings.set(Settings.WIFI_CLEAR_KEYGUARD, b);
+                        KeyguardMediator.getInstance(
+                                getActivity()).notifyStateChanged();
+                        listView.setEnabled(b);
                     }
                 });
         networksContainer = v.findViewById(R.id.devices_container);
@@ -69,31 +75,28 @@ public class WifiFragment extends Fragment {
 
     private void updateSelections() {
         SparseBooleanArray ary = listView.getCheckedItemPositions();
-        Log.v(TAG, "Updating selections: " + listView.getCheckedItemCount() + " " + ary.size());
         int length = listView.getAdapter().getCount();
 
         ArrayList<WifiConfiguration> networks = Lists.newArrayList();
         for (int i = 0; i < length; i++) {
             if (ary.get(i)) {
-                Log.v(TAG, "Selected item");
                 networks.add((WifiConfiguration) listView.getItemAtPosition(i));
             }
         }
 
-        String pref = Joiner.on(",").join(Lists.transform(networks,
+        List<String> pref = Lists.transform(networks,
                 new Function<WifiConfiguration,String>() {
                     @Override
                     public String apply(WifiConfiguration d) {
                         return d.SSID;
                     }
-                }));
+                });
 
-        String oldPref = settings.get(Settings.WIFI_NETWORKS);
+        List<String> oldPref = settings.get(Settings.WIFI_NETWORKS);
         Log.v(TAG, String.format("Size: %d, Old: [%s], new: [%s]",
                 networks.size(), oldPref, pref));
 
-        if (!pref.equals(oldPref)) {
-            Log.v(TAG, "Updating selected wifi networks: " + pref);
+        if (!Iterables.elementsEqual(pref, oldPref)) {
             settings.set(Settings.WIFI_NETWORKS, pref);
         }
         KeyguardMediator.getInstance(getActivity()).notifyStateChanged();
@@ -128,6 +131,7 @@ public class WifiFragment extends Fragment {
         final List<WifiConfiguration> networks = wm.getConfiguredNetworks();
 
         disableKg.setChecked(settings.get(Settings.WIFI_CLEAR_KEYGUARD));
+        listView.setEnabled(disableKg.isChecked());
 
         if (networks == null || networks.size() == 0) {
             noNetworksContainer.setVisibility(View.VISIBLE);
@@ -158,12 +162,11 @@ public class WifiFragment extends Fragment {
                         }
                     };
             listView.setAdapter(arrayAdapter);
-            String selected = settings.get(Settings.WIFI_NETWORKS);
+            Set<String> selected = Sets.newHashSet(
+                    settings.get(Settings.WIFI_NETWORKS));
             if (selected != null) {
-                List<String> selectedList = Arrays.asList(selected.split(","));
                 for (int i = 0, j = networks.size(); i < j; i++) {
-                    if (selectedList.contains(
-                            arrayAdapter.getItem(i).SSID)) {
+                    if (selected.contains(arrayAdapter.getItem(i).SSID)) {
                         listView.setItemChecked(i, true);
                     }
                 }

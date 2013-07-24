@@ -1,28 +1,16 @@
 package com.hanhuy.android.bluetooth.keyguard;
 
-import android.app.AlertDialog;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
+import android.app.admin.DevicePolicyManager;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.util.SparseBooleanArray;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.*;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.google.common.collect.Sets;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuItem;
 
 public class MainActivity extends SherlockFragmentActivity {
     private final static int DIALOG_NO_PAIRED_DEVICES = 0;
@@ -68,5 +56,36 @@ public class MainActivity extends SherlockFragmentActivity {
             }
             return title;
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // yuck, but it seems there's no other way to toggle menu items after
+        // enabling device admin
+        supportInvalidateOptionsMenu();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getSupportMenuInflater().inflate(R.menu.main, menu);
+        MenuItem setPass = menu.findItem(R.id.set_password);
+        DevicePolicyManager dpm = (DevicePolicyManager) getSystemService(
+                Context.DEVICE_POLICY_SERVICE);
+        setPass.setEnabled(dpm.isAdminActive(
+                new ComponentName(this, AdminReceiver.class)));
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.set_password:
+                Intent setp = new Intent(this, PasswordActivity.class);
+                startActivity(setp);
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

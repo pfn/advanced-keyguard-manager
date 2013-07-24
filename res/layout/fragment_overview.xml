@@ -56,15 +56,6 @@
             android:text="@string/disabled_admin_warning"
             />
 
-    <Button
-            android:id="@+id/set_password"
-            android:layout_marginTop="@dimen/frame_padding"
-            android:layout_width="@dimen/button_width"
-            android:layout_height="wrap_content"
-            android:layout_gravity="right"
-            android:text="@string/set_password"
-            />
-
     <TextView
             style="?android:attr/listSeparatorTextViewStyle"
             android:layout_marginTop="@dimen/frame_padding"

@@ -9,10 +9,8 @@ import android.net.wifi.WifiManager;
 import android.util.Log;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -43,7 +41,11 @@ public class KeyguardMediator {
         boolean newState = isSecurityEnabled();
         if (disabled != newState) {
 
+            Log.v(TAG, "toggling lock screen state: " + newState);
             ctx.sendBroadcast(new Intent(ACTION_STATE_CHANGED));
+            settings.set(Settings.LOCK_DISABLED, newState);
+            updatePasswordSetTime();
+            dpm.resetPassword(disabled ? "" : CryptoUtils.getPassword(ctx), 0);
         }
     }
 
@@ -54,16 +56,8 @@ public class KeyguardMediator {
             return !disableKG;
         }
 
-        String encrypted = settings.get(Settings.PASSWORD);
-        String hmac = settings.get(Settings.PASSWORD_HASH);
-        if (encrypted == null || hmac == null) {
-            Log.v(TAG, "password and/or hmac are null");
-            return !disableKG;
-        }
-
-        String password = CryptoUtils.decrypt(encrypted);
-        if (!hmac.equals(CryptoUtils.hmac(password))) {
-            Log.v(TAG, "password does not match hmac");
+        if (!CryptoUtils.isPasswordSaved(ctx)) {
+            Log.v(TAG, "password and/or hmac not set properly");
             return !disableKG;
         }
 
@@ -71,32 +65,51 @@ public class KeyguardMediator {
             WifiManager wm = (WifiManager) ctx.getSystemService(
                     Context.WIFI_SERVICE);
             final WifiInfo current = wm.getConnectionInfo();
-            String selectedAPs = settings.get(Settings.WIFI_NETWORKS);
+            List<String> selectedAPs = settings.get(Settings.WIFI_NETWORKS);
 
             if (current != null) {
-                disableKG |= Arrays.asList(
-                        selectedAPs.split(",")).contains(current.getSSID());
+                boolean hasNetworks = Sets.newHashSet(
+                        selectedAPs).contains(current.getSSID());
+                if (hasNetworks) {
+                    Log.v(TAG, String.format( "Found networks: %s in %s",
+                            current.getSSID(), selectedAPs));
+                }
+                disableKG |= hasNetworks;
             }
         }
 
-        String selectedDevices = settings.get(Settings.BLUETOOTH_DEVICES);
+        List<String> selectedDevices = settings.get(Settings.BLUETOOTH_DEVICES);
         if (!disableKG && settings.get(Settings.BT_CLEAR_KEYGUARD) &&
-                selectedDevices != null) {
-            String connectedDevices = settings.get(
+                selectedDevices.size() > 0) {
+            List<String> connectedDevices = settings.get(
                     Settings.BLUETOOTH_CONNECTIONS);
 
-            final List<String> connected = Lists.newArrayList(
-                    (connectedDevices == null ?
-                            "" : connectedDevices).split(","));
             final Set<String> selected = Sets.newHashSet(
-                    selectedDevices.split(","));
-            disableKG |= null != Iterables.find(connected, new Predicate<String>() {
-                @Override
-                public boolean apply(java.lang.String addr) {
-                    return selected.contains(addr);
-                }
-            });
+                    selectedDevices);
+            boolean hasDevices = Iterables.tryFind(connectedDevices,
+                    new Predicate<String>() {
+                        @Override
+                        public boolean apply(java.lang.String addr) {
+                            return selected.contains(addr);
+                        }
+                    }).isPresent();
+            if (hasDevices) {
+                Log.v(TAG, String.format( "Found devices: %s in %s",
+                        connectedDevices, selectedDevices));
+            }
+            disableKG |= hasDevices;
         }
         return !disableKG;
+    }
+
+    private long changeTime = 0;
+    public void updatePasswordSetTime() {
+        changeTime = System.currentTimeMillis();
+    }
+
+    // there is a window of opportunity where a settings-changed password
+    // reset will mess this up
+    public boolean passwordSetRecently() {
+        return System.currentTimeMillis() - changeTime < 10000;
     }
 }

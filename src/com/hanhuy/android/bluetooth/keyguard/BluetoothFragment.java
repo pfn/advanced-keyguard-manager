@@ -16,6 +16,7 @@ import android.view.ViewGroup;
 import android.widget.*;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -45,6 +46,9 @@ public class BluetoothFragment extends Fragment {
                     @Override
                     public void onCheckedChanged(CompoundButton c, boolean b) {
                         settings.set(Settings.BT_CLEAR_KEYGUARD, b);
+                        KeyguardMediator.getInstance(
+                                getActivity()).notifyStateChanged();
+                        listView.setEnabled(b);
                     }
                 });
         devicesContainer = v.findViewById(R.id.devices_container);
@@ -79,7 +83,7 @@ public class BluetoothFragment extends Fragment {
     }
 
     @Override
-    public void startActivityForResult(Intent intent, int requestCode) {
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
         refreshDevices();
     }
 
@@ -88,7 +92,6 @@ public class BluetoothFragment extends Fragment {
         public void onReceive(Context context, Intent intent) {
             BluetoothAdapter bt = BluetoothAdapter.getDefaultAdapter();
             if (bt.getState() == BluetoothAdapter.STATE_ON) {
-                context.unregisterReceiver(this);
                 refreshDevices();
             }
         }
@@ -101,6 +104,7 @@ public class BluetoothFragment extends Fragment {
                 bt.getBondedDevices() : Sets.<BluetoothDevice>newHashSet();
 
         disableKg.setChecked(settings.get(Settings.BT_CLEAR_KEYGUARD));
+        listView.setEnabled(disableKg.isChecked());
 
         final BluetoothDevice[] pairedDevices =
                 new BluetoothDevice[devices.size()];
@@ -122,11 +126,9 @@ public class BluetoothFragment extends Fragment {
             btDisabledContainer.setVisibility(View.GONE);
             noDevicesContainer.setVisibility(View.GONE);
             devicesContainer.setVisibility(View.VISIBLE);
-            String connectedString = settings.get(
+            List<String> connectedList = settings.get(
                     Settings.BLUETOOTH_CONNECTIONS);
-            final Set<String> connected =
-                    Sets.newHashSet((connectedString == null ?
-                            "" : connectedString).split(","));
+            final Set<String> connected = Sets.newHashSet(connectedList);
             ArrayAdapter<BluetoothDevice> arrayAdapter =
                     new ArrayAdapter<BluetoothDevice>(getActivity(),
                             android.R.layout.simple_list_item_multiple_choice,
@@ -147,14 +149,12 @@ public class BluetoothFragment extends Fragment {
                         }
                     };
             listView.setAdapter(arrayAdapter);
-            String selected = settings.get(Settings.BLUETOOTH_DEVICES);
-            if (selected != null) {
-                List<String> selectedList = Arrays.asList(selected.split(","));
-                for (int i = 0, j = devices.size(); i < j; i++) {
-                    if (selectedList.contains(
-                            arrayAdapter.getItem(i).getAddress())) {
-                        listView.setItemChecked(i, true);
-                    }
+            List<String> selected = settings.get(Settings.BLUETOOTH_DEVICES);
+            Set<String> selectedList = Sets.newHashSet(selected);
+            for (int i = 0, j = devices.size(); i < j; i++) {
+                if (selectedList.contains(
+                        arrayAdapter.getItem(i).getAddress())) {
+                    listView.setItemChecked(i, true);
                 }
             }
         }
@@ -173,31 +173,26 @@ public class BluetoothFragment extends Fragment {
 
     private void updateSelections() {
         SparseBooleanArray ary = listView.getCheckedItemPositions();
-        Log.v(TAG, "Updating selections: " + listView.getCheckedItemCount() + " " + ary.size());
         int length = listView.getAdapter().getCount();
 
         ArrayList<BluetoothDevice> devices = Lists.newArrayList();
         for (int i = 0; i < length; i++) {
             if (ary.get(i)) {
-                Log.v(TAG, "selected item");
                 devices.add((BluetoothDevice) listView.getItemAtPosition(i));
             }
         }
 
-        String pref = Joiner.on(",").join(Lists.transform(devices,
+        List<String> pref = Lists.transform(devices,
                 new Function<BluetoothDevice,String>() {
                     @Override
                     public String apply(BluetoothDevice d) {
                         return d.getAddress();
                     }
-                }));
+                });
 
-        String oldPref = settings.get(Settings.BLUETOOTH_DEVICES);
-        Log.v(TAG, String.format("Size: %d, Old: [%s], new: [%s]",
-                devices.size(), oldPref, pref));
+        List<String> oldPref = settings.get(Settings.BLUETOOTH_DEVICES);
 
-        if (!pref.equals(oldPref)) {
-            Log.v(TAG, "updating selected devices: " + pref);
+        if (!Iterables.elementsEqual(pref, oldPref)) {
             settings.set(Settings.BLUETOOTH_DEVICES, pref);
         }
         KeyguardMediator.getInstance(getActivity()).notifyStateChanged();

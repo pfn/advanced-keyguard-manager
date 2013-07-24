@@ -4,6 +4,7 @@ import android.app.admin.DeviceAdminInfo;
 import android.app.admin.DevicePolicyManager;
 import android.content.*;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,7 +18,6 @@ import java.util.List;
 
 public class OverviewFragment extends Fragment {
     private CompoundButton toggle;
-    private View setPassword;
     private DevicePolicyManager dpm;
     private ComponentName cn;
     private Settings settings;
@@ -50,7 +50,13 @@ public class OverviewFragment extends Fragment {
                             dpm.removeActiveAdmin(cn);
                             disabledWarning.setVisibility(View.VISIBLE);
                             warning.setVisibility(View.GONE);
-                            setPassword.setVisibility(View.GONE);
+
+                            new Handler().post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    getActivity().supportInvalidateOptionsMenu();
+                                }
+                            });
                         }
                         else {
                             addAdmin.putExtra(
@@ -63,14 +69,6 @@ public class OverviewFragment extends Fragment {
                         }
                     }
                 });
-        setPassword = v.findViewById(R.id.set_password);
-        setPassword.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent setp = new Intent(getActivity(), PasswordActivity.class);
-                startActivity(setp);
-            }
-        });
         return v;
     }
 
@@ -103,16 +101,13 @@ public class OverviewFragment extends Fragment {
                 View.VISIBLE : View.GONE);
         toggle.setChecked(isActive);
         String encrypted = settings.get(Settings.PASSWORD);
-        if (encrypted == null) {
+
+        if (!CryptoUtils.isPasswordSaved(getActivity())) {
             pinPasswordStatus.setText(R.string.unset);
             pinPasswordStatus.setTextColor(0xffff0000);
         } else {
             String password = CryptoUtils.decrypt(encrypted);
-            boolean isPIN = false;
-            try {
-                Integer.parseInt(password);
-                isPIN = true;
-            } catch (NumberFormatException e) {  } // ignore
+            boolean isPIN = CryptoUtils.isPIN(getActivity());
 
             pinPasswordStatus.setText(isPIN ? R.string.pin : R.string.password);
             pinPasswordStatus.setTextColor(0xff00aa00);
@@ -121,20 +116,19 @@ public class OverviewFragment extends Fragment {
         KeyguardMediator kgm = KeyguardMediator.getInstance(getActivity());
 
         lockscreenStatus.setText(kgm.isSecurityEnabled() ?
-                R.string.enabled : R.string.disabled);
+                R.string.enabled : R.string.bypassed);
         lockscreenStatus.setTextColor(
                 kgm.isSecurityEnabled() ? 0xff00aa00 : 0xff770000);
-        setPassword.setVisibility(isActive ? View.VISIBLE : View.GONE);
     }
 
     private boolean areOtherAdminsSet() {
         List<ComponentName> admins = dpm.getActiveAdmins();
-        return Iterables.find(admins, new Predicate<ComponentName>() {
+        return Iterables.tryFind(admins, new Predicate<ComponentName>() {
             @Override
             public boolean apply(android.content.ComponentName c) {
                 return !cn.equals(c) && dpm.hasGrantedPolicy(
                         c, DeviceAdminInfo.USES_POLICY_LIMIT_PASSWORD);
             }
-        }, null) != null;
+        }).isPresent();
     }
 }
