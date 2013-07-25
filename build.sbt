@@ -14,4 +14,6 @@ libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % "1.9.1" % "test"
 )
 
+javacOptions in Compile += "-Xlint:deprecation"
+
 run <<= run in Android

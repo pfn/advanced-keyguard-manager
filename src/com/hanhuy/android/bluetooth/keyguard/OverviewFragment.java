@@ -92,10 +92,14 @@ public class OverviewFragment extends Fragment {
         return v;
     }
 
-    private BroadcastReceiver keyguardReceiver = new BroadcastReceiver() {
+    private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            updateUI();
+            if (KeyguardService.ACTION_PONG.equals(intent.getAction())) {
+                keyguardStatus.setText(R.string.disabled);
+                keyguardStatus.setTextColor(COLOR_INFO);
+            } else
+                updateUI();
         }
     };
 
@@ -105,13 +109,14 @@ public class OverviewFragment extends Fragment {
         updateUI();
         IntentFilter filter = new IntentFilter();
         filter.addAction(LockMediator.ACTION_STATE_CHANGED);
-        getActivity().registerReceiver(keyguardReceiver, filter);
+        filter.addAction(KeyguardService.ACTION_PONG);
+        getActivity().registerReceiver(receiver, filter);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        getActivity().unregisterReceiver(keyguardReceiver);
+        getActivity().unregisterReceiver(receiver);
     }
 
     private void updateUI() {
@@ -139,10 +144,9 @@ public class OverviewFragment extends Fragment {
         lockscreenStatus.setTextColor(
                 isSecure ? COLOR_OK : COLOR_INFO);
 
-        keyguardStatus.setText(security.second ?
-            R.string.enabled : R.string.disabled);
-        keyguardStatus.setTextColor(
-                security.second ? COLOR_OK : COLOR_INFO);
+        keyguardStatus.setText(R.string.enabled);
+        keyguardStatus.setTextColor(COLOR_OK);
+        getActivity().sendBroadcast(new Intent(KeyguardService.ACTION_PING));
     }
 
     private boolean areOtherAdminsSet() {
