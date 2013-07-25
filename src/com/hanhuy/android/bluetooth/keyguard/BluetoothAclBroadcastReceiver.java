@@ -39,7 +39,7 @@ public class BluetoothAclBroadcastReceiver extends BroadcastReceiver {
             s.set(Settings.BLUETOOTH_CONNECTIONS,
                     Lists.newArrayList(connected));
             Log.v(TAG, "connected devices: " + connected);
-            KeyguardMediator.getInstance(ctx).notifyStateChanged();
+            LockMediator.getInstance(ctx).notifyStateChanged();
         }
     }
 

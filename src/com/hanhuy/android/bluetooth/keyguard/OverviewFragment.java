@@ -100,7 +100,7 @@ public class OverviewFragment extends Fragment {
         super.onResume();
         updateUI();
         IntentFilter filter = new IntentFilter();
-        filter.addAction(KeyguardMediator.ACTION_STATE_CHANGED);
+        filter.addAction(LockMediator.ACTION_STATE_CHANGED);
         getActivity().registerReceiver(keyguardReceiver, filter);
     }
 
@@ -127,7 +127,7 @@ public class OverviewFragment extends Fragment {
             pinPasswordStatus.setTextColor(0xff00aa00);
 
         }
-        KeyguardMediator kgm = KeyguardMediator.getInstance(getActivity());
+        LockMediator kgm = LockMediator.getInstance(getActivity());
         Pair<Boolean,Boolean> security = kgm.isSecurityEnabled();
         boolean isSecure = security.first || !dpm.isAdminActive(cn);
 

@@ -17,13 +17,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
 import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -52,7 +50,7 @@ public class WifiFragment extends Fragment {
                     @Override
                     public void onCheckedChanged(CompoundButton c, boolean b) {
                         settings.set(Settings.WIFI_CLEAR_KEYGUARD, b);
-                        KeyguardMediator.getInstance(
+                        LockMediator.getInstance(
                                 getActivity()).notifyStateChanged();
                         listView.setEnabled(b);
                     }
@@ -87,7 +85,7 @@ public class WifiFragment extends Fragment {
                                     item.SSID, Settings.DISABLE_KEYGUARD),
                                     disable);
                             adapter.notifyDataSetChanged();
-                            KeyguardMediator.getInstance(
+                            LockMediator.getInstance(
                                     getActivity()).notifyStateChanged();
                         }
                         return true;
@@ -129,7 +127,7 @@ public class WifiFragment extends Fragment {
         if (!Iterables.elementsEqual(pref, oldPref)) {
             settings.set(Settings.WIFI_NETWORKS, pref);
         }
-        KeyguardMediator.getInstance(getActivity()).notifyStateChanged();
+        LockMediator.getInstance(getActivity()).notifyStateChanged();
     }
 
     private BroadcastReceiver connectivityReceiver = new BroadcastReceiver() {

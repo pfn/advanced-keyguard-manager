@@ -66,7 +66,7 @@ public class MainActivity extends SherlockFragmentActivity {
             if (hasWindowFocus()) {
                 NotificationManager nm = (NotificationManager) getSystemService(
                         Context.NOTIFICATION_SERVICE);
-                nm.cancel(KeyguardMediator.NOTIFICATION_TOGGLE);
+                nm.cancel(LockMediator.NOTIFICATION_TOGGLE);
             }
         }
     };
@@ -76,9 +76,9 @@ public class MainActivity extends SherlockFragmentActivity {
 
         NotificationManager nm = (NotificationManager) getSystemService(
                 Context.NOTIFICATION_SERVICE);
-        nm.cancel(KeyguardMediator.NOTIFICATION_TOGGLE);
+        nm.cancel(LockMediator.NOTIFICATION_TOGGLE);
         IntentFilter filter = new IntentFilter();
-        filter.addAction(KeyguardMediator.ACTION_STATE_CHANGED);
+        filter.addAction(LockMediator.ACTION_STATE_CHANGED);
         registerReceiver(keyguardReceiver, filter);
 
         // yuck, but it seems there's no other way to toggle menu items after

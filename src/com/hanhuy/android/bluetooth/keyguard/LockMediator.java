@@ -22,27 +22,27 @@ import java.util.Set;
 import static com.hanhuy.android.bluetooth.keyguard.Settings.device;
 import static com.hanhuy.android.bluetooth.keyguard.Settings.network;
 
-public class KeyguardMediator {
+public class LockMediator {
     public final static int NOTIFICATION_RESET = 1;
     public final static int NOTIFICATION_TOGGLE = 2;
     public final static String ACTION_STATE_CHANGED =
             "com.hanhuy.android.bluetooth.keyguard.KGM_STATE_CHANGE";
-    private final static String TAG = "KeyguardMediator";
-    private static KeyguardMediator instance;
+    private final static String TAG = "LockMediator";
+    private static LockMediator instance;
     private final Context ctx;
     private final DevicePolicyManager dpm;
     private final Settings settings;
 
-    private KeyguardMediator (Context c) {
+    private LockMediator(Context c) {
         ctx = c;
         settings = Settings.getInstance(ctx);
         dpm = (DevicePolicyManager) ctx.getSystemService(
                 Context.DEVICE_POLICY_SERVICE);
     }
 
-    public static KeyguardMediator getInstance(Context c) {
+    public static LockMediator getInstance(Context c) {
         if (instance == null)
-            instance = new KeyguardMediator(c.getApplicationContext());
+            instance = new LockMediator(c.getApplicationContext());
         return instance;
     }
 
@@ -87,7 +87,7 @@ public class KeyguardMediator {
                 NotificationManager nm =
                         (NotificationManager) ctx.getSystemService(
                                 Context.NOTIFICATION_SERVICE);
-                nm.notify(KeyguardMediator.NOTIFICATION_TOGGLE, n);
+                nm.notify(LockMediator.NOTIFICATION_TOGGLE, n);
             }
             ctx.sendBroadcast(new Intent(ACTION_STATE_CHANGED));
         }
@@ -95,7 +95,7 @@ public class KeyguardMediator {
 
     /**
      *
-     * @return Pair[disableLock,disableKeyguard]
+     * @return Pair[lockEnabled,keyguardEnabled]
      */
     public Pair<Boolean, Boolean> isSecurityEnabled() {
         boolean disableLock = false;

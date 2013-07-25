@@ -9,15 +9,13 @@ import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
-import java.lang.annotation.ElementType;
-
 public class AdminReceiver extends DeviceAdminReceiver{
     private final static String TAG = "AdminReceiver";
 
     @Override
     public void onEnabled(Context context, Intent intent) {
         Log.v(TAG, "Enabled");
-        KeyguardMediator.getInstance(context).notifyStateChanged();
+        LockMediator.getInstance(context).notifyStateChanged();
     }
 
     @Override
@@ -28,7 +26,7 @@ public class AdminReceiver extends DeviceAdminReceiver{
     @Override
     public void onDisabled(Context context, Intent intent) {
         Log.v(TAG, "Disabled");
-        KeyguardMediator.getInstance(context).notifyStateChanged();
+        LockMediator.getInstance(context).notifyStateChanged();
         Settings s = Settings.getInstance(context);
         s.set(Settings.LOCK_DISABLED, false);
     }
@@ -37,7 +35,7 @@ public class AdminReceiver extends DeviceAdminReceiver{
     public void onPasswordChanged(Context c, Intent intent) {
         Log.v(TAG, "Password Changed!");
         Settings s = Settings.getInstance(c);
-        KeyguardMediator kgm = KeyguardMediator.getInstance(c);
+        LockMediator kgm = LockMediator.getInstance(c);
         if (s.get(Settings.PASSWORD) != null && !kgm.passwordSetRecently()) {
             PendingIntent pending = PendingIntent.getActivity(
                     c, 0, new Intent(c, PasswordActivity.class), 0);
@@ -58,7 +56,7 @@ public class AdminReceiver extends DeviceAdminReceiver{
             NotificationManager nm =
                     (NotificationManager) c.getSystemService(
                             Context.NOTIFICATION_SERVICE);
-            nm.notify(KeyguardMediator.NOTIFICATION_RESET, n);
+            nm.notify(LockMediator.NOTIFICATION_RESET, n);
             kgm.notifyStateChanged();
         }
     }

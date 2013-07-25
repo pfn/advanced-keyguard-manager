@@ -49,7 +49,7 @@ public class BluetoothFragment extends Fragment {
                     @Override
                     public void onCheckedChanged(CompoundButton c, boolean b) {
                         settings.set(Settings.BT_CLEAR_KEYGUARD, b);
-                        KeyguardMediator.getInstance(
+                        LockMediator.getInstance(
                                 getActivity()).notifyStateChanged();
                         listView.setEnabled(b);
                     }
@@ -96,7 +96,7 @@ public class BluetoothFragment extends Fragment {
                             settings.set(device(
                                     addr, Settings.DISABLE_KEYGUARD), disable);
                             adapter.notifyDataSetChanged();
-                            KeyguardMediator.getInstance(
+                            LockMediator.getInstance(
                                     getActivity()).notifyStateChanged();
                         }
                         return true;
@@ -231,7 +231,7 @@ public class BluetoothFragment extends Fragment {
         if (!Iterables.elementsEqual(pref, oldPref)) {
             settings.set(Settings.BLUETOOTH_DEVICES, pref);
         }
-        KeyguardMediator.getInstance(getActivity()).notifyStateChanged();
+        LockMediator.getInstance(getActivity()).notifyStateChanged();
     }
 
     @Override

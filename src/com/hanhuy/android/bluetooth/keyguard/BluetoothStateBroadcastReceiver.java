@@ -13,6 +13,6 @@ public class BluetoothStateBroadcastReceiver extends BroadcastReceiver {
         Settings s = Settings.getInstance(ctx);
         Log.i(TAG, "clearing connected device state");
         s.set(Settings.BLUETOOTH_CONNECTIONS, null);
-        KeyguardMediator.getInstance(ctx).notifyStateChanged();
+        LockMediator.getInstance(ctx).notifyStateChanged();
     }
 }

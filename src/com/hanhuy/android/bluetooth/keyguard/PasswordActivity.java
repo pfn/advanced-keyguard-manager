@@ -266,8 +266,8 @@ public class PasswordActivity extends SherlockFragmentActivity {
                                 (DevicePolicyManager) getActivity()
                                         .getSystemService(
                                                 Context.DEVICE_POLICY_SERVICE);
-                        KeyguardMediator kgm =
-                                KeyguardMediator.getInstance(getActivity());
+                        LockMediator kgm =
+                                LockMediator.getInstance(getActivity());
                         kgm.updatePasswordSetTime();
                         dpm.resetPassword(password, 0);
                         kgm.notifyStateChanged();
