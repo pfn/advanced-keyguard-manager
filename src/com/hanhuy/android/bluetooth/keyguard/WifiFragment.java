@@ -27,6 +27,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import static com.hanhuy.android.bluetooth.keyguard.Settings.network;
+
 public class WifiFragment extends Fragment {
     private final static String TAG = "WifiFragment";
     private ListView listView;
@@ -34,6 +36,7 @@ public class WifiFragment extends Fragment {
     private Settings settings;
     private View networksContainer;
     private View noNetworksContainer;
+    private ArrayAdapter<WifiConfiguration> adapter;
 
     private final static String ACTION_WIFI_SETTINGS =
             "android.settings.WIFI_SETTINGS";
@@ -70,6 +73,26 @@ public class WifiFragment extends Fragment {
                 updateSelections();
             }
         });
+        listView.setOnItemLongClickListener(
+                new AdapterView.OnItemLongClickListener() {
+                    @Override
+                    public boolean onItemLongClick(
+                            AdapterView<?> list, View view, int i, long l) {
+                        boolean isChecked = listView.isItemChecked(i);
+                        if (isChecked) {
+                            WifiConfiguration item = adapter.getItem(i);
+                            boolean disable = !settings.get(network(
+                                    item.SSID, Settings.DISABLE_KEYGUARD));
+                            settings.set(network(
+                                    item.SSID, Settings.DISABLE_KEYGUARD),
+                                    disable);
+                            adapter.notifyDataSetChanged();
+                            KeyguardMediator.getInstance(
+                                    getActivity()).notifyStateChanged();
+                        }
+                        return true;
+                    }
+                });
         return v;
     }
 
@@ -81,6 +104,13 @@ public class WifiFragment extends Fragment {
         for (int i = 0; i < length; i++) {
             if (ary.get(i)) {
                 networks.add((WifiConfiguration) listView.getItemAtPosition(i));
+            } else {
+                Settings.Setting<Boolean> disablekg = network(
+                        adapter.getItem(i).SSID, Settings.DISABLE_KEYGUARD);
+                boolean wasDisabled = settings.get(disablekg);
+                settings.set(disablekg, false);
+                if (wasDisabled)
+                    adapter.notifyDataSetChanged();
             }
         }
 
@@ -139,10 +169,9 @@ public class WifiFragment extends Fragment {
         } else {
             noNetworksContainer.setVisibility(View.GONE);
             networksContainer.setVisibility(View.VISIBLE);
-            ArrayAdapter<WifiConfiguration> arrayAdapter =
-                    new ArrayAdapter<WifiConfiguration>(getActivity(),
-                            android.R.layout.simple_list_item_multiple_choice,
-                            networks) {
+            adapter = new ArrayAdapter<WifiConfiguration>(getActivity(),
+                    android.R.layout.simple_list_item_multiple_choice,
+                    networks) {
                         @Override
                         public View getView(int position, View convertView,
                                             ViewGroup parent) {
@@ -152,7 +181,15 @@ public class WifiFragment extends Fragment {
                             String ssid = _ssid;
                             if (ssid.startsWith("\"") && ssid.endsWith("\""))
                                 ssid = ssid.substring(1, ssid.length() - 1);
+
                             TextView v = (TextView) convertView;
+                            int drawableLeft = 0;
+                            if (settings.get(network(
+                                    _ssid, Settings.DISABLE_KEYGUARD))) {
+                                drawableLeft = R.drawable.ic_lock_inverse;
+                            }
+                            v.setCompoundDrawablesWithIntrinsicBounds(
+                                    drawableLeft, 0, 0, 0);
                             if (current != null &&
                                     current.getSSID().equals(_ssid)) {
                                 v.setTextColor(0xff00aa00);
@@ -161,14 +198,12 @@ public class WifiFragment extends Fragment {
                             return convertView;
                         }
                     };
-            listView.setAdapter(arrayAdapter);
+            listView.setAdapter(adapter);
             Set<String> selected = Sets.newHashSet(
                     settings.get(Settings.WIFI_NETWORKS));
-            if (selected != null) {
-                for (int i = 0, j = networks.size(); i < j; i++) {
-                    if (selected.contains(arrayAdapter.getItem(i).SSID)) {
-                        listView.setItemChecked(i, true);
-                    }
+            for (int i = 0, j = networks.size(); i < j; i++) {
+                if (selected.contains(adapter.getItem(i).SSID)) {
+                    listView.setItemChecked(i, true);
                 }
             }
         }

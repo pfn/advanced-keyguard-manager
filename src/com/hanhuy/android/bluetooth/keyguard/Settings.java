@@ -11,6 +11,10 @@ import java.util.Collections;
 import java.util.List;
 
 public class Settings {
+    public final static Setting<Boolean> DISABLE_KEYGUARD =
+            new BooleanSetting("disable_keyguard");
+    public final static Setting<Boolean> SHOW_NOTIFICATIONS =
+            new BooleanSetting("notifications", true);
     public final static Setting<Boolean> LOCK_DISABLED =
             new BooleanSetting("lock_disabled");
     public final static Setting<String> PASSWORD_HASH =
@@ -33,23 +37,42 @@ public class Settings {
 
     public abstract static class Setting<T> {
         public final String key;
-        public Setting(String key) {
+        public final T defaultValue;
+        public Setting(String key, T defaultValue) {
             this.key = key;
+            this.defaultValue = defaultValue;
         }
         public String toString() {
             return key;
         }
+
+        public abstract Setting<T> prefix(String prefix);
     }
 
     public static class StringSetting extends Setting<String> {
-        public StringSetting(String key) { super(key); }
+        public StringSetting(String key) { super(key, null); }
+        public StringSetting prefix(String prefix) {
+            return new StringSetting(prefix + "." + key);
+        }
     }
     public static class BooleanSetting extends Setting<Boolean> {
-        public BooleanSetting(String key) { super(key); }
+        public BooleanSetting(String key) { this(key, false); }
+        public BooleanSetting(String key, boolean defaultValue) {
+            super(key, defaultValue);
+        }
+        public BooleanSetting prefix(String prefix) {
+            return new BooleanSetting(prefix + "." + key, defaultValue);
+        }
     }
 
     public static class StringListSetting extends Setting<List<String>> {
-        public StringListSetting(String key) { super(key); }
+        @SuppressWarnings("unchecked")
+        public StringListSetting(String key) {
+            super(key, Collections.EMPTY_LIST);
+        }
+        public StringListSetting prefix(String prefix) {
+            return new StringListSetting(prefix + "." + key);
+        }
     }
 
     private static Settings instance;
@@ -83,7 +106,8 @@ public class Settings {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T get(Setting<T> setting, T defaultValue) {
+    public <T> T get(Setting<T> setting) {
+        T defaultValue = setting.defaultValue;
         if (setting instanceof StringSetting) {
             return (T) prefs.getString(setting.key, (String) defaultValue);
         } else if (setting instanceof BooleanSetting) {
@@ -108,7 +132,10 @@ public class Settings {
         }
     }
 
-    public <T> T get(Setting<T> setting) {
-        return get(setting, null);
+    public static <T> Setting<T> network(String net, Setting<T> setting) {
+        return setting.prefix("network." + net);
+    }
+    public static <T> Setting<T> device(String dev, Setting<T> setting) {
+        return setting.prefix("device." + dev);
     }
 }

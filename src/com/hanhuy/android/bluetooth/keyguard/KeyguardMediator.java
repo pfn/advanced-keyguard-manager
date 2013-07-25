@@ -11,12 +11,16 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.util.Pair;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 import java.util.List;
 import java.util.Set;
+
+import static com.hanhuy.android.bluetooth.keyguard.Settings.device;
+import static com.hanhuy.android.bluetooth.keyguard.Settings.network;
 
 public class KeyguardMediator {
     public final static int NOTIFICATION_RESET = 1;
@@ -44,11 +48,18 @@ public class KeyguardMediator {
 
     public void notifyStateChanged() {
         boolean disabled = settings.get(Settings.LOCK_DISABLED);
-        boolean newState = !isSecurityEnabled();
+        Pair<Boolean, Boolean> security = isSecurityEnabled();
+        boolean newState = !security.first;
 
         if (!dpm.isAdminActive(new ComponentName(ctx, AdminReceiver.class))) {
             Log.v(TAG, "device administrator is not active");
             return;
+        }
+
+        if (security.second) {
+            ctx.stopService(new Intent(ctx, KeyguardService.class));
+        } else {
+            ctx.startService(new Intent(ctx, KeyguardService.class));
         }
 
         if (disabled != newState && CryptoUtils.isPasswordSaved(ctx)) {
@@ -59,54 +70,65 @@ public class KeyguardMediator {
 
             dpm.resetPassword(newState ? "" : CryptoUtils.getPassword(ctx), 0);
 
-            PendingIntent pending = PendingIntent.getActivity(
-                    ctx, 0, new Intent(ctx, MainActivity.class), 0);
-            String text = ctx.getString(newState ?
-                    R.string.lockscreen_disabled :
-                    R.string.lockscreen_enabled);
-            Notification n = new NotificationCompat.Builder(ctx)
-                    .setAutoCancel(true)
-                    .setTicker(text)
-                    .setSmallIcon(R.drawable.ic_lock)
-                    .setContentIntent(pending)
-                    .setContentTitle(ctx.getString(R.string.app_name))
-                    .setContentText(text)
-                    .build();
-            NotificationManager nm =
-                    (NotificationManager) ctx.getSystemService(
-                            Context.NOTIFICATION_SERVICE);
-            nm.notify(KeyguardMediator.NOTIFICATION_TOGGLE, n);
+            if (settings.get(Settings.SHOW_NOTIFICATIONS)) {
+                PendingIntent pending = PendingIntent.getActivity(
+                        ctx, 0, new Intent(ctx, MainActivity.class), 0);
+                String text = ctx.getString(newState ?
+                        R.string.lockscreen_disabled :
+                        R.string.lockscreen_enabled);
+                Notification n = new NotificationCompat.Builder(ctx)
+                        .setAutoCancel(true)
+                        .setTicker(text)
+                        .setSmallIcon(R.drawable.ic_lock)
+                        .setContentIntent(pending)
+                        .setContentTitle(ctx.getString(R.string.app_name))
+                        .setContentText(text)
+                        .build();
+                NotificationManager nm =
+                        (NotificationManager) ctx.getSystemService(
+                                Context.NOTIFICATION_SERVICE);
+                nm.notify(KeyguardMediator.NOTIFICATION_TOGGLE, n);
+            }
             ctx.sendBroadcast(new Intent(ACTION_STATE_CHANGED));
         }
     }
 
-    public boolean isSecurityEnabled() {
+    /**
+     *
+     * @return Pair[disableLock,disableKeyguard]
+     */
+    public Pair<Boolean, Boolean> isSecurityEnabled() {
+        boolean disableLock = false;
         boolean disableKG = false;
 
         if (!CryptoUtils.isPasswordSaved(ctx)) {
             Log.v(TAG, "password and/or hmac not set [properly]");
-            return !disableKG;
+            return Pair.create(!disableLock, !disableKG);
         }
 
-        if (!disableKG && settings.get(Settings.WIFI_CLEAR_KEYGUARD)) {
+        if (!disableLock && settings.get(Settings.WIFI_CLEAR_KEYGUARD)) {
             WifiManager wm = (WifiManager) ctx.getSystemService(
                     Context.WIFI_SERVICE);
             final WifiInfo current = wm.getConnectionInfo();
             List<String> selectedAPs = settings.get(Settings.WIFI_NETWORKS);
 
             if (current != null) {
+                String ssid = current.getSSID();
                 boolean hasNetworks = Sets.newHashSet(
-                        selectedAPs).contains(current.getSSID());
+                        selectedAPs).contains(ssid);
                 if (hasNetworks) {
                     Log.v(TAG, String.format( "Found networks: %s in %s",
                             current.getSSID(), selectedAPs));
                 }
-                disableKG |= hasNetworks;
+                disableKG |= settings.get(
+                        network(ssid, Settings.DISABLE_KEYGUARD));
+                disableLock |= hasNetworks;
             }
         }
 
+        final boolean[] _disableKG = { false };
         List<String> selectedDevices = settings.get(Settings.BLUETOOTH_DEVICES);
-        if (!disableKG && settings.get(Settings.BT_CLEAR_KEYGUARD) &&
+        if (!disableLock && settings.get(Settings.BT_CLEAR_KEYGUARD) &&
                 selectedDevices.size() > 0) {
             List<String> connectedDevices = settings.get(
                     Settings.BLUETOOTH_CONNECTIONS);
@@ -117,6 +139,8 @@ public class KeyguardMediator {
                     new Predicate<String>() {
                         @Override
                         public boolean apply(java.lang.String addr) {
+                            _disableKG[0] |= settings.get(
+                                    device(addr, Settings.DISABLE_KEYGUARD));
                             return selected.contains(addr);
                         }
                     }).isPresent();
@@ -124,9 +148,10 @@ public class KeyguardMediator {
                 Log.v(TAG, String.format( "Found devices: %s in %s",
                         connectedDevices, selectedDevices));
             }
-            disableKG |= hasDevices;
+            disableKG |= _disableKG[0];
+            disableLock |= hasDevices;
         }
-        return !disableKG;
+        return Pair.create(!disableLock, !disableKG);
     }
 
     private long changeTime = 0;

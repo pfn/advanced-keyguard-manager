@@ -7,4 +7,10 @@
         android:showAsAction="never"
         android:title="@string/set_password"
         />
+    <item
+        android:id="@+id/show_notifications"
+        android:showAsAction="never"
+        android:title="@string/show_notifications"
+        android:checkable="true"
+        />
 </menu>

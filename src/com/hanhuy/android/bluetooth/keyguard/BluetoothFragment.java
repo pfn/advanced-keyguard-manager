@@ -8,19 +8,21 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
 import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import static com.hanhuy.android.bluetooth.keyguard.Settings.device;
 
 public class BluetoothFragment extends Fragment {
     private final static String TAG = "BluetoothFragment";
@@ -34,6 +36,7 @@ public class BluetoothFragment extends Fragment {
     private View noDevicesContainer;
     private View noAdapterContainer;
     private View btDisabledContainer;
+    private ArrayAdapter<BluetoothDevice> adapter;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup c, Bundle b) {
@@ -77,6 +80,26 @@ public class BluetoothFragment extends Fragment {
                     public void onItemClick(
                             AdapterView<?> a, View v, int i, long l) {
                         updateSelections();
+                    }
+                });
+        listView.setOnItemLongClickListener(
+                new AdapterView.OnItemLongClickListener() {
+                    @Override
+                    public boolean onItemLongClick(
+                            AdapterView<?> list, View view, int i, long l) {
+                        boolean isChecked = listView.isItemChecked(i);
+                        if (isChecked) {
+                            BluetoothDevice item = adapter.getItem(i);
+                            String addr = item.getAddress();
+                            boolean disable = !settings.get(
+                                    device(addr, Settings.DISABLE_KEYGUARD));
+                            settings.set(device(
+                                    addr, Settings.DISABLE_KEYGUARD), disable);
+                            adapter.notifyDataSetChanged();
+                            KeyguardMediator.getInstance(
+                                    getActivity()).notifyStateChanged();
+                        }
+                        return true;
                     }
                 });
         return v;
@@ -129,31 +152,36 @@ public class BluetoothFragment extends Fragment {
             List<String> connectedList = settings.get(
                     Settings.BLUETOOTH_CONNECTIONS);
             final Set<String> connected = Sets.newHashSet(connectedList);
-            ArrayAdapter<BluetoothDevice> arrayAdapter =
-                    new ArrayAdapter<BluetoothDevice>(getActivity(),
-                            android.R.layout.simple_list_item_multiple_choice,
-                            pairedDevices) {
-                        @Override
-                        public View getView(int position, View convertView,
-                                            ViewGroup parent) {
-                            convertView = super.getView(
-                                    position, convertView, parent);
-                            TextView v = (TextView) convertView;
-                            v.setText(
-                                    pairedDevices[position].getName());
-                            if (connected.contains(
-                                    pairedDevices[position].getAddress())) {
-                                v.setTextColor(0xff00aa00);
-                            }
-                            return convertView;
-                        }
-                    };
-            listView.setAdapter(arrayAdapter);
+            adapter = new ArrayAdapter<BluetoothDevice>(getActivity(),
+                    android.R.layout.simple_list_item_multiple_choice,
+                    pairedDevices) {
+                @Override
+                public View getView(int position, View convertView,
+                                    ViewGroup parent) {
+                    convertView = super.getView(
+                            position, convertView, parent);
+                    TextView v = (TextView) convertView;
+                    int drawableLeft = 0;
+                    String addr = pairedDevices[position].getAddress();
+                    if (settings.get(device(
+                            addr, Settings.DISABLE_KEYGUARD))) {
+                        drawableLeft = R.drawable.ic_lock_inverse;
+                    }
+                    v.setCompoundDrawablesWithIntrinsicBounds(
+                            drawableLeft, 0, 0, 0);
+                    v.setText(
+                            pairedDevices[position].getName());
+                    if (connected.contains(addr)) {
+                        v.setTextColor(0xff00aa00);
+                    }
+                    return convertView;
+                }
+            };
+            listView.setAdapter(adapter);
             List<String> selected = settings.get(Settings.BLUETOOTH_DEVICES);
             Set<String> selectedList = Sets.newHashSet(selected);
             for (int i = 0, j = devices.size(); i < j; i++) {
-                if (selectedList.contains(
-                        arrayAdapter.getItem(i).getAddress())) {
+                if (selectedList.contains(adapter.getItem(i).getAddress())) {
                     listView.setItemChecked(i, true);
                 }
             }
@@ -179,6 +207,14 @@ public class BluetoothFragment extends Fragment {
         for (int i = 0; i < length; i++) {
             if (ary.get(i)) {
                 devices.add((BluetoothDevice) listView.getItemAtPosition(i));
+            } else {
+                Settings.Setting<Boolean> disablekg = device(
+                        adapter.getItem(i).getAddress(),
+                        Settings.DISABLE_KEYGUARD);
+                boolean wasDisabled = settings.get(disablekg);
+                settings.set(disablekg, false);
+                if (wasDisabled)
+                    adapter.notifyDataSetChanged();
             }
         }
 

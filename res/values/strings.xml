@@ -4,11 +4,13 @@
     <string name="pair">Pair</string>
     <string name="bt_unlock_instructions">
         Select paired devices that will disable lock screen security
-        while connected
+        while connected. Long-press an item to have the keyguard completely
+        disabled while it is connected (if checked).
     </string>
     <string name="wifi_unlock_instructions">
         Select known networks that will disable lock screen security
-        while connected
+        while connected. Long-press an item to have the keyguard completely
+        disabled while it is connected (if checked).
     </string>
     <string name="no_paired_devices">
         No paired bluetooth devices
@@ -79,4 +81,6 @@
         automatically if disabled
     </string>
     <string name="press_menu_for_more">Press menu for more options</string>
+    <string name="show_notifications">Show Notifications</string>
+    <string name="hide_notifications">Hide Notifications</string>
 </resources>

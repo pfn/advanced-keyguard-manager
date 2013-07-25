@@ -3,6 +3,7 @@ package com.hanhuy.android.bluetooth.keyguard;
 import android.app.NotificationManager;
 import android.app.admin.DevicePolicyManager;
 import android.content.*;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -13,12 +14,14 @@ import com.actionbarsherlock.view.MenuItem;
 
 public class MainActivity extends SherlockFragmentActivity {
     private final static int DIALOG_NO_PAIRED_DEVICES = 0;
-    
+    private Settings settings;
+
     final static String TAG = "BluetoothKeyguardMainActivity";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        settings = Settings.getInstance(this);
         setContentView(R.layout.main);
         ViewPager pager = (ViewPager) findViewById(R.id.pager);
         pager.setAdapter(new PagerAdapter());
@@ -71,6 +74,9 @@ public class MainActivity extends SherlockFragmentActivity {
     protected void onResume() {
         super.onResume();
 
+        NotificationManager nm = (NotificationManager) getSystemService(
+                Context.NOTIFICATION_SERVICE);
+        nm.cancel(KeyguardMediator.NOTIFICATION_TOGGLE);
         IntentFilter filter = new IntentFilter();
         filter.addAction(KeyguardMediator.ACTION_STATE_CHANGED);
         registerReceiver(keyguardReceiver, filter);
@@ -94,6 +100,13 @@ public class MainActivity extends SherlockFragmentActivity {
                 Context.DEVICE_POLICY_SERVICE);
         setPass.setEnabled(dpm.isAdminActive(
                 new ComponentName(this, AdminReceiver.class)));
+        MenuItem showNotifications = menu.findItem(R.id.show_notifications);
+        boolean showNotif = settings.get(Settings.SHOW_NOTIFICATIONS);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+            showNotifications.setTitle(showNotif ?
+                    R.string.hide_notifications : R.string.show_notifications);
+        }
+        showNotifications.setChecked(showNotif);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -103,6 +116,15 @@ public class MainActivity extends SherlockFragmentActivity {
             case R.id.set_password:
                 Intent setp = new Intent(this, PasswordActivity.class);
                 startActivity(setp);
+                return true;
+            case R.id.show_notifications:
+                boolean value = !item.isChecked();
+                settings.set(Settings.SHOW_NOTIFICATIONS, value);
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+                    item.setTitle(value ? R.string.hide_notifications :
+                            R.string.show_notifications);
+                }
+                item.setChecked(value);
                 return true;
         }
         return super.onOptionsItemSelected(item);

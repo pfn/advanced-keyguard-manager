@@ -7,6 +7,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -127,17 +128,18 @@ public class OverviewFragment extends Fragment {
 
         }
         KeyguardMediator kgm = KeyguardMediator.getInstance(getActivity());
-        boolean isSecure = kgm.isSecurityEnabled() || !dpm.isAdminActive(cn);
+        Pair<Boolean,Boolean> security = kgm.isSecurityEnabled();
+        boolean isSecure = security.first || !dpm.isAdminActive(cn);
 
         lockscreenStatus.setText(isSecure ?
                 R.string.enabled : R.string.bypassed);
         lockscreenStatus.setTextColor(
                 isSecure ? 0xff00aa00 : 0xff770000);
 
-        keyguardStatus.setText(true ?
-            R.string.enabled : R.string.bypassed);
+        keyguardStatus.setText(security.second ?
+            R.string.enabled : R.string.disabled);
         keyguardStatus.setTextColor(
-                true ? 0xff00aa00 : 0xff770000);
+                security.second ? 0xff00aa00 : 0xff770000);
     }
 
     private boolean areOtherAdminsSet() {
