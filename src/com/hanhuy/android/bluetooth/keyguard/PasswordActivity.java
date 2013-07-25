@@ -15,6 +15,7 @@ import android.text.method.PasswordTransformationMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,8 +27,13 @@ public class PasswordActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         Fragment start = CryptoUtils.isPasswordSaved(this) ?
                 new Verify() : new New();
+        // this is necessary because ActionBarActivity prevents
+        // android.R.id.content from being used pre-3.0
+        FrameLayout f = new FrameLayout(this);
+        f.setId(R.id.content);
+        setContentView(f);
         getSupportFragmentManager().beginTransaction().replace(
-                android.R.id.content, start).commit();
+                R.id.content, start).commit();
     }
 
     public static class Verify extends Fragment {
@@ -97,7 +103,7 @@ public class PasswordActivity extends ActionBarActivity {
                         warning.setVisibility(View.INVISIBLE);
                         getActivity().getSupportFragmentManager()
                                 .beginTransaction()
-                                .replace(android.R.id.content, new New())
+                                .replace(R.id.content, new New())
                                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
                                 .commit();
                     }
@@ -182,7 +188,7 @@ public class PasswordActivity extends ActionBarActivity {
 
         private void nextStep() {
             getActivity().getSupportFragmentManager().beginTransaction()
-                    .replace(android.R.id.content, new Confirm(
+                    .replace(R.id.content, new Confirm(
                             isPIN, field.getText().toString()))
                     .setTransition(
                             FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
