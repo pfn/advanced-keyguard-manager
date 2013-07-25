@@ -133,6 +133,15 @@
                 android:text="@string/enabled"
                 />
     </LinearLayout>
+    <TextView
+            android:id="@+id/password_warning"
+            android:layout_marginTop="@dimen/frame_padding"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#ff0000"
+            android:textStyle="bold"
+            android:text="@string/warning_password"
+            />
     <View android:layout_width="match_parent"
           android:layout_height="0dp"
           android:layout_weight="1"

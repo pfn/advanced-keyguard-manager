@@ -81,7 +81,7 @@ public class LockMediator {
                         .setTicker(text)
                         .setSmallIcon(R.drawable.ic_lock)
                         .setContentIntent(pending)
-                        .setContentTitle(ctx.getString(R.string.app_name))
+                        .setContentTitle(ctx.getString(R.string.notif_title))
                         .setContentText(text)
                         .build();
                 NotificationManager nm =

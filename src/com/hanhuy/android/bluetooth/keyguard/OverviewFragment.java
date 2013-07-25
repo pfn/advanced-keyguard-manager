@@ -28,6 +28,7 @@ public class OverviewFragment extends Fragment {
     private TextView pinPasswordStatus;
     private View warning;
     private View disabledWarning;
+    private View passwordWarning;
     private TextView keyguardStatus;
 
     private final static int COLOR_WARNING = 0xffff0000;
@@ -48,6 +49,7 @@ public class OverviewFragment extends Fragment {
         keyguardStatus = (TextView) v.findViewById(R.id.keyguard_status);
         warning = v.findViewById(R.id.warning);
         disabledWarning = v.findViewById(R.id.disabled_warning);
+        passwordWarning = v.findViewById(R.id.password_warning);
 
         if (hasPermanentMenuKey()) {
             v.findViewById(
@@ -120,8 +122,12 @@ public class OverviewFragment extends Fragment {
     }
 
     private void updateUI() {
+        LockMediator lm = LockMediator.getInstance(getActivity());
         boolean isActive = dpm.isAdminActive(cn);
         disabledWarning.setVisibility(isActive ? View.GONE : View.VISIBLE);
+        passwordWarning.setVisibility(
+                CryptoUtils.isPasswordSaved(getActivity()) ?
+                        View.GONE : View.VISIBLE);
         warning.setVisibility(isActive && areOtherAdminsSet() ?
                 View.VISIBLE : View.GONE);
         toggle.setChecked(isActive);
@@ -135,7 +141,6 @@ public class OverviewFragment extends Fragment {
             pinPasswordStatus.setTextColor(COLOR_OK);
 
         }
-        LockMediator lm = LockMediator.getInstance(getActivity());
         Pair<Boolean,Boolean> security = lm.isSecurityEnabled();
         boolean isSecure = security.first || !dpm.isAdminActive(cn);
 

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Advanced Keyguard Manager</string>
+    <string name="notif_title">Lock Manager</string>
     <string name="pair">Pair</string>
     <string name="bt_unlock_instructions">
         Select paired devices that will disable lock screen security
@@ -83,4 +84,7 @@
     <string name="press_menu_for_more">Press menu for more options</string>
     <string name="show_notifications">Show Notifications</string>
     <string name="hide_notifications">Hide Notifications</string>
+    <string name="warning_password">Advanced Keyguard Manager will not function
+        unless a password is set
+    </string>
 </resources>
