@@ -18,8 +18,6 @@ public class KeyguardService extends Service {
             "com.hanhuy.android.bluetooth.keyguard.KEYGUARD_SERVICE_PONG";
     private final static String TAG = "KeyguardService";
 
-    private final Handler handler = new Handler();
-
     @SuppressWarnings("deprecation")
     private KeyguardManager.KeyguardLock kgml;
     
@@ -36,31 +34,24 @@ public class KeyguardService extends Service {
         Log.v(TAG, "Starting keyguard disabler");
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_PING);
+        filter.addAction(Intent.ACTION_SCREEN_ON);
         registerReceiver(receiver, filter);
 
         KeyguardManager kgm = (KeyguardManager) getSystemService(
                 KEYGUARD_SERVICE);
         kgml = kgm.newKeyguardLock(TAG);
-        
-        disableRunner.run();
+        kgml.disableKeyguard();
     }
-
-    // something seems to re-enable the keyguard on us, request disabling
-    // every 15 minutes--device sleep should let this take longer between
-    // delayed executions
-    private final Runnable disableRunner = new Runnable() {
-        @Override
-        public void run() {
-            if (kgml != null)
-                kgml.disableKeyguard();
-            handler.postDelayed(disableRunner, 15 * 60 * 1000);
-        }
-    };
 
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            sendBroadcast(new Intent(ACTION_PONG));
+            if (ACTION_PING.equals(intent.getAction())) {
+                sendBroadcast(new Intent(ACTION_PONG));
+            } else {
+                if (kgml != null)
+                    kgml.disableKeyguard();
+            }
         }
     };
 
@@ -72,7 +63,6 @@ public class KeyguardService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        handler.removeCallbacks(disableRunner);
         unregisterReceiver(receiver);
         Log.v(TAG, "keyguard disabler destroyed");
         kgml.reenableKeyguard();
