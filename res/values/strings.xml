@@ -25,9 +25,9 @@
         Controls lock screen based on wifi and bluetooth connections
     </string>
     <string name="notif_passwd_changed_title">
-        Screen lock password changed</string>
+        Lock password changed</string>
     <string name="notif_passwd_changed_text">
-        Keyguard unlocker has been disabled, reset your password</string>
+        Unlocker disabled, reset password</string>
 
     <string name="lockscreen_disabled">Lock screen security disabled</string>
     <string name="lockscreen_enabled">Lock screen security enabled</string>
@@ -63,8 +63,8 @@
     <string name="verify_password">You must verify your current PIN or password
         before continuing
     </string>
-    <string name="disabled_admin_warning">Keyguard unlocker will not function
-        unless device administrator is active
+    <string name="disabled_admin_warning">Advanced Keyguard Manager will not
+        function unless device administrator is active
     </string>
     <string name="bluetooth_disabled">Bluetooth is disabled</string>
     <string name="try_again">Try again</string>
