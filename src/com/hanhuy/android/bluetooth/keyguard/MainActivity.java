@@ -8,11 +8,11 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuItem;
+import android.support.v7.app.ActionBarActivity;
+import android.view.Menu;
+import android.view.MenuItem;
 
-public class MainActivity extends SherlockFragmentActivity {
+public class MainActivity extends ActionBarActivity {
     private final static int DIALOG_NO_PAIRED_DEVICES = 0;
     private Settings settings;
 
@@ -94,7 +94,7 @@ public class MainActivity extends SherlockFragmentActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getSupportMenuInflater().inflate(R.menu.main, menu);
+        getMenuInflater().inflate(R.menu.main, menu);
         MenuItem setPass = menu.findItem(R.id.set_password);
         DevicePolicyManager dpm = (DevicePolicyManager) getSystemService(
                 Context.DEVICE_POLICY_SERVICE);
@@ -120,10 +120,6 @@ public class MainActivity extends SherlockFragmentActivity {
             case R.id.show_notifications:
                 boolean value = !item.isChecked();
                 settings.set(Settings.SHOW_NOTIFICATIONS, value);
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-                    item.setTitle(value ? R.string.hide_notifications :
-                            R.string.show_notifications);
-                }
                 item.setChecked(value);
                 return true;
         }

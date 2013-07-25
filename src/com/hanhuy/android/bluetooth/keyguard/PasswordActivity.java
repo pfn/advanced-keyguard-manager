@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBarActivity;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
@@ -17,9 +18,8 @@ import android.view.ViewGroup;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.actionbarsherlock.app.SherlockFragmentActivity;
 
-public class PasswordActivity extends SherlockFragmentActivity {
+public class PasswordActivity extends ActionBarActivity {
     private final static String TAG = "PasswordActivity";
 
     public void onCreate(Bundle savedInstanceState) {
