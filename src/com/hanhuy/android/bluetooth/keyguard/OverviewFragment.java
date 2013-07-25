@@ -30,6 +30,10 @@ public class OverviewFragment extends Fragment {
     private View disabledWarning;
     private TextView keyguardStatus;
 
+    private final static int COLOR_WARNING = 0xffff0000;
+    private final static int COLOR_OK      = 0xff00aa00;
+    private final static int COLOR_INFO    = 0xff770000;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup c, Bundle s) {
         settings = Settings.getInstance(getActivity());
@@ -116,30 +120,29 @@ public class OverviewFragment extends Fragment {
         warning.setVisibility(isActive && areOtherAdminsSet() ?
                 View.VISIBLE : View.GONE);
         toggle.setChecked(isActive);
-        String encrypted = settings.get(Settings.PASSWORD);
 
         if (!CryptoUtils.isPasswordSaved(getActivity())) {
             pinPasswordStatus.setText(R.string.unset);
-            pinPasswordStatus.setTextColor(0xffff0000);
+            pinPasswordStatus.setTextColor(COLOR_WARNING);
         } else {
             boolean isPIN = CryptoUtils.isPIN(getActivity());
             pinPasswordStatus.setText(isPIN ? R.string.pin : R.string.password);
-            pinPasswordStatus.setTextColor(0xff00aa00);
+            pinPasswordStatus.setTextColor(COLOR_OK);
 
         }
-        LockMediator kgm = LockMediator.getInstance(getActivity());
-        Pair<Boolean,Boolean> security = kgm.isSecurityEnabled();
+        LockMediator lm = LockMediator.getInstance(getActivity());
+        Pair<Boolean,Boolean> security = lm.isSecurityEnabled();
         boolean isSecure = security.first || !dpm.isAdminActive(cn);
 
         lockscreenStatus.setText(isSecure ?
                 R.string.enabled : R.string.bypassed);
         lockscreenStatus.setTextColor(
-                isSecure ? 0xff00aa00 : 0xff770000);
+                isSecure ? COLOR_OK : COLOR_INFO);
 
         keyguardStatus.setText(security.second ?
             R.string.enabled : R.string.disabled);
         keyguardStatus.setTextColor(
-                security.second ? 0xff00aa00 : 0xff770000);
+                security.second ? COLOR_OK : COLOR_INFO);
     }
 
     private boolean areOtherAdminsSet() {
