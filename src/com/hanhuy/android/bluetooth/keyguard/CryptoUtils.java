@@ -1,7 +1,6 @@
 package com.hanhuy.android.bluetooth.keyguard;
 
 import android.content.Context;
-import android.util.Log;
 import com.google.common.io.BaseEncoding;
 
 import javax.crypto.Cipher;
@@ -125,7 +124,6 @@ public class CryptoUtils {
 
     public static String getPassword(Context c) {
         Settings s = Settings.getInstance(c);
-        boolean isSaved = false;
         String saved = s.get(Settings.PASSWORD);
         String hash = s.get(Settings.PASSWORD_HASH);
         if (saved != null && hash != null) {

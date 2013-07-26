@@ -35,8 +35,8 @@ public class AdminReceiver extends DeviceAdminReceiver{
     public void onPasswordChanged(Context c, Intent intent) {
         Log.v(TAG, "Password Changed!");
         Settings s = Settings.getInstance(c);
-        LockMediator kgm = LockMediator.getInstance(c);
-        if (s.get(Settings.PASSWORD) != null && !kgm.passwordSetRecently()) {
+        LockMediator lm = LockMediator.getInstance(c);
+        if (s.get(Settings.PASSWORD) != null && !lm.passwordSetRecently()) {
             PendingIntent pending = PendingIntent.getActivity(
                     c, 0, new Intent(c, PasswordActivity.class), 0);
             Notification n = new NotificationCompat.Builder(c)
@@ -57,10 +57,11 @@ public class AdminReceiver extends DeviceAdminReceiver{
                     (NotificationManager) c.getSystemService(
                             Context.NOTIFICATION_SERVICE);
             nm.notify(LockMediator.NOTIFICATION_RESET, n);
-            kgm.notifyStateChanged();
+            lm.notifyStateChanged();
         }
     }
 
+    // these require permission watch_login, currently unused
     @Override
     public void onPasswordFailed(Context context, Intent intent) {
         Log.v(TAG, "Login failed");

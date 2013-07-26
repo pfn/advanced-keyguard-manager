@@ -162,6 +162,6 @@ public class LockMediator {
     // there is a window of opportunity where a settings-changed password
     // reset will mess this up
     public boolean passwordSetRecently() {
-        return System.currentTimeMillis() - changeTime < 60000;
+        return System.currentTimeMillis() - changeTime < 60 * 1000;
     }
 }
