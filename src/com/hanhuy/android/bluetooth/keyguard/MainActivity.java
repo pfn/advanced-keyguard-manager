@@ -9,6 +9,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
+import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -23,8 +24,15 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         settings = Settings.getInstance(this);
         setContentView(R.layout.main);
-        ViewPager pager = (ViewPager) findViewById(R.id.pager);
-        pager.setAdapter(new PagerAdapter());
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        float wdp = metrics.widthPixels / metrics.scaledDensity;
+        float hdp = metrics.heightPixels / metrics.scaledDensity;
+
+        if (Math.min(hdp, wdp) < 600) {
+            ViewPager pager = (ViewPager) findViewById(R.id.pager);
+            pager.setAdapter(new PagerAdapter());
+        }
     }
 
     private class PagerAdapter extends FragmentPagerAdapter {
