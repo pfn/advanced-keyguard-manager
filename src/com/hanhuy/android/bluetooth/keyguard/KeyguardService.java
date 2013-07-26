@@ -16,10 +16,11 @@ public class KeyguardService extends Service {
     public final static String ACTION_PONG =
             "com.hanhuy.android.bluetooth.keyguard.KEYGUARD_SERVICE_PONG";
     private final static String TAG = "KeyguardService";
+    private KeyguardManager kgm;
 
     @SuppressWarnings("deprecation")
     private KeyguardManager.KeyguardLock kgml;
-    
+
     @Override
     public IBinder onBind(Intent intent) {
         return null;
@@ -37,7 +38,7 @@ public class KeyguardService extends Service {
         filter.addAction(Intent.ACTION_SCREEN_OFF);
         registerReceiver(receiver, filter);
 
-        KeyguardManager kgm = (KeyguardManager) getSystemService(
+        kgm = (KeyguardManager) getSystemService(
                 KEYGUARD_SERVICE);
         kgml = kgm.newKeyguardLock(TAG);
         kgml.disableKeyguard();
@@ -45,13 +46,17 @@ public class KeyguardService extends Service {
 
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
+        @SuppressWarnings("deprecation")
         public void onReceive(Context context, Intent intent) {
             if (ACTION_PING.equals(intent.getAction())) {
                 sendBroadcast(new Intent(ACTION_PONG));
-            } else {
-                if (kgml != null)
-                    kgml.disableKeyguard();
+            } else if (Intent.ACTION_SCREEN_ON.equals(intent.getAction())) {
+                if (kgm.inKeyguardRestrictedInputMode()) {
+                    kgml.reenableKeyguard();
+                    kgml = kgm.newKeyguardLock(TAG);
+                }
             }
+            kgml.disableKeyguard();
         }
     };
 
