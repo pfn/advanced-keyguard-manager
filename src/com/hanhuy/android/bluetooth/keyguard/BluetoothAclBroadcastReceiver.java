@@ -12,6 +12,10 @@ import com.google.common.collect.Sets;
 import java.util.HashSet;
 import java.util.List;
 
+/**
+ * Store state of connected devices.
+ * The bluetooth API does not have such functionality.
+ */
 public class BluetoothAclBroadcastReceiver extends BroadcastReceiver {
     final static String TAG = "BluetoothAclBroadcastReceiver";
 

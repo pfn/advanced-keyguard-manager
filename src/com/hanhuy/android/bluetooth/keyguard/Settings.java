@@ -11,6 +11,11 @@ import java.util.Collections;
 import java.util.List;
 
 public class Settings {
+    public final static Setting<Boolean> REQUIRE_UNLOCK =
+            new BooleanSetting("require_unlock");
+    /**
+     * This setting is scoped by device() or network()
+     */
     public final static Setting<Boolean> DISABLE_KEYGUARD =
             new BooleanSetting("disable_keyguard");
     public final static Setting<Boolean> SHOW_NOTIFICATIONS =

@@ -87,4 +87,5 @@
     <string name="warning_password">Advanced Keyguard Manager will not function
         unless a password is set
     </string>
+    <string name="require_unlock">Require Unlock First</string>
 </resources>

@@ -117,11 +117,18 @@ public class MainActivity extends ActionBarActivity {
                 Intent setp = new Intent(this, PasswordActivity.class);
                 startActivity(setp);
                 return true;
-            case R.id.show_notifications:
+            case R.id.show_notifications: {
                 boolean value = !item.isChecked();
                 settings.set(Settings.SHOW_NOTIFICATIONS, value);
                 item.setChecked(value);
                 return true;
+            }
+            case R.id.require_unlock: {
+                boolean value = !item.isChecked();
+                settings.set(Settings.REQUIRE_UNLOCK, value);
+                item.setChecked(value);
+                return true;
+            }
         }
         return super.onOptionsItemSelected(item);
     }

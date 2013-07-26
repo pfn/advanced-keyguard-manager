@@ -1,5 +1,6 @@
 package com.hanhuy.android.bluetooth.keyguard;
 
+import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -9,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.util.Pair;
@@ -32,10 +34,14 @@ public class LockMediator {
     private final Context ctx;
     private final DevicePolicyManager dpm;
     private final Settings settings;
+    private final KeyguardManager kgm;
+    private final PowerManager pm;
 
     private LockMediator(Context c) {
         ctx = c;
         settings = Settings.getInstance(ctx);
+        pm = (PowerManager) ctx.getSystemService(Context.POWER_SERVICE);
+        kgm = (KeyguardManager) ctx.getSystemService(Context.KEYGUARD_SERVICE);
         dpm = (DevicePolicyManager) ctx.getSystemService(
                 Context.DEVICE_POLICY_SERVICE);
     }
@@ -48,6 +54,7 @@ public class LockMediator {
 
     public void notifyStateChanged() {
         boolean disabled = settings.get(Settings.LOCK_DISABLED);
+        boolean requireUnlock = settings.get(Settings.REQUIRE_UNLOCK);
         Pair<Boolean, Boolean> security = isSecurityEnabled();
         boolean newState = !security.first;
 
@@ -59,10 +66,18 @@ public class LockMediator {
         if (security.second) {
             ctx.stopService(new Intent(ctx, KeyguardService.class));
         } else {
-            ctx.startService(new Intent(ctx, KeyguardService.class));
+            if (!requireUnlock || disabled ||
+                    (pm.isScreenOn() && !kgm.inKeyguardRestrictedInputMode())) {
+                ctx.startService(new Intent(ctx, KeyguardService.class));
+            }
         }
 
         if (disabled != newState && CryptoUtils.isPasswordSaved(ctx)) {
+
+            if (requireUnlock && !disabled && (!pm.isScreenOn() ||
+                    !kgm.inKeyguardRestrictedInputMode())) {
+                return;
+            }
 
             Log.v(TAG, "toggling lock screen state: " + !newState);
             settings.set(Settings.LOCK_DISABLED, newState);
