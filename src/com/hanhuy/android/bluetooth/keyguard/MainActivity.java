@@ -101,12 +101,9 @@ public class MainActivity extends ActionBarActivity {
         setPass.setEnabled(dpm.isAdminActive(
                 new ComponentName(this, AdminReceiver.class)));
         MenuItem showNotifications = menu.findItem(R.id.show_notifications);
-        boolean showNotif = settings.get(Settings.SHOW_NOTIFICATIONS);
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-            showNotifications.setTitle(showNotif ?
-                    R.string.hide_notifications : R.string.show_notifications);
-        }
-        showNotifications.setChecked(showNotif);
+        MenuItem requireUnlock = menu.findItem(R.id.require_unlock);
+        requireUnlock.setChecked(settings.get(Settings.REQUIRE_UNLOCK));
+        showNotifications.setChecked(settings.get(Settings.SHOW_NOTIFICATIONS));
         return super.onCreateOptionsMenu(menu);
     }
 

@@ -10,7 +10,15 @@ import com.google.gson.JsonSyntaxException;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * TODO add a way to prune scoped-settings that are no longer used.
+ * i.e. when a wifi configuration or bluetooth device is removed (unpaired)
+ */
 public class Settings {
+    /**
+     * TODO make this a scoped by device/network setting.
+     * i.e. make this setting configurable per-device and network
+     */
     public final static Setting<Boolean> REQUIRE_UNLOCK =
             new BooleanSetting("require_unlock");
     /**
