@@ -75,7 +75,7 @@ public class LockMediator {
         if (disabled != newState && CryptoUtils.isPasswordSaved(ctx)) {
 
             if (requireUnlock && !disabled && (!pm.isScreenOn() ||
-                    !kgm.inKeyguardRestrictedInputMode())) {
+                    kgm.inKeyguardRestrictedInputMode())) {
                 return;
             }
 
