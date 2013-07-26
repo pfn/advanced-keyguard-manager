@@ -6,7 +6,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -35,6 +34,7 @@ public class KeyguardService extends Service {
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_PING);
         filter.addAction(Intent.ACTION_SCREEN_ON);
+        filter.addAction(Intent.ACTION_SCREEN_OFF);
         registerReceiver(receiver, filter);
 
         KeyguardManager kgm = (KeyguardManager) getSystemService(

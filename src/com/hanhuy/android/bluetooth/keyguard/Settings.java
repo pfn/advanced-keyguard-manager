@@ -145,10 +145,16 @@ public class Settings {
         }
     }
 
+    public static String network(String net) {
+        return "network." + net;
+    }
+    public static String device(String dev) {
+        return "device." + dev;
+    }
     public static <T> Setting<T> network(String net, Setting<T> setting) {
-        return setting.prefix("network." + net);
+        return setting.prefix(network(net));
     }
     public static <T> Setting<T> device(String dev, Setting<T> setting) {
-        return setting.prefix("device." + dev);
+        return setting.prefix(device(dev));
     }
 }

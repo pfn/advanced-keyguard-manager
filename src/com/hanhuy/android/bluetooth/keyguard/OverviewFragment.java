@@ -141,8 +141,8 @@ public class OverviewFragment extends Fragment {
             pinPasswordStatus.setTextColor(COLOR_OK);
 
         }
-        Pair<Boolean,Boolean> security = lm.isSecurityEnabled();
-        boolean isSecure = security.first || !dpm.isAdminActive(cn);
+        LockMediator.Status status = lm.getLockMediatorStatus();
+        boolean isSecure = status.security || !isActive;
 
         lockscreenStatus.setText(isSecure ?
                 R.string.enabled : R.string.bypassed);

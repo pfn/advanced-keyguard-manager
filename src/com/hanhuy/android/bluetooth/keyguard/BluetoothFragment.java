@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
@@ -91,13 +92,9 @@ public class BluetoothFragment extends Fragment {
                         if (isChecked) {
                             BluetoothDevice item = adapter.getItem(i);
                             String addr = item.getAddress();
-                            boolean disable = !settings.get(
-                                    device(addr, Settings.DISABLE_KEYGUARD));
-                            settings.set(device(
-                                    addr, Settings.DISABLE_KEYGUARD), disable);
-                            adapter.notifyDataSetChanged();
-                            LockMediator.getInstance(
-                                    getActivity()).notifyStateChanged();
+                            DialogFragment d = new LockOptionsFragment(
+                                    device(addr), item.getName(), adapter);
+                            d.show(getFragmentManager(), "LockOptions");
                         }
                         return true;
                     }
@@ -163,8 +160,15 @@ public class BluetoothFragment extends Fragment {
                     TextView v = (TextView) convertView;
                     int drawableLeft = 0;
                     String addr = pairedDevices[position].getAddress();
-                    if (settings.get(device(
-                            addr, Settings.DISABLE_KEYGUARD))) {
+                    boolean disableKG = settings.get(
+                            device(addr, Settings.DISABLE_KEYGUARD));
+                    boolean requireUnlock = settings.get(
+                            device(addr, Settings.REQUIRE_UNLOCK));
+                    if (disableKG && requireUnlock) {
+                        drawableLeft = R.drawable.lock_and_keyguard;
+                    } else if (disableKG) {
+                        drawableLeft = R.drawable.ic_display;
+                    } else if (requireUnlock) {
                         drawableLeft = R.drawable.ic_lock_inverse;
                     }
                     v.setCompoundDrawablesWithIntrinsicBounds(

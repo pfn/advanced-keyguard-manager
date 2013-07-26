@@ -9,6 +9,7 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.util.SparseBooleanArray;
@@ -79,14 +80,12 @@ public class WifiFragment extends Fragment {
                         boolean isChecked = listView.isItemChecked(i);
                         if (isChecked) {
                             WifiConfiguration item = adapter.getItem(i);
-                            boolean disable = !settings.get(network(
-                                    item.SSID, Settings.DISABLE_KEYGUARD));
-                            settings.set(network(
-                                    item.SSID, Settings.DISABLE_KEYGUARD),
-                                    disable);
-                            adapter.notifyDataSetChanged();
-                            LockMediator.getInstance(
-                                    getActivity()).notifyStateChanged();
+                            String ssid = item.SSID;
+                            if (ssid.startsWith("\"") && ssid.endsWith("\""))
+                                ssid = ssid.substring(1, ssid.length() - 1);
+                            DialogFragment d = new LockOptionsFragment(
+                                    network(item.SSID), ssid, adapter);
+                            d.show(getFragmentManager(), "LockOptions");
                         }
                         return true;
                     }
@@ -182,8 +181,15 @@ public class WifiFragment extends Fragment {
 
                             TextView v = (TextView) convertView;
                             int drawableLeft = 0;
-                            if (settings.get(network(
-                                    _ssid, Settings.DISABLE_KEYGUARD))) {
+                            boolean disableKG = settings.get(
+                                    network(_ssid, Settings.DISABLE_KEYGUARD));
+                            boolean requireUnlock = settings.get(
+                                    network(_ssid, Settings.REQUIRE_UNLOCK));
+                            if (disableKG && requireUnlock) {
+                                drawableLeft = R.drawable.lock_and_keyguard;
+                            } else if (disableKG) {
+                                drawableLeft = R.drawable.ic_display;
+                            } else if (requireUnlock) {
                                 drawableLeft = R.drawable.ic_lock_inverse;
                             }
                             v.setCompoundDrawablesWithIntrinsicBounds(

@@ -37,6 +37,19 @@ public class LockMediator {
     private final KeyguardManager kgm;
     private final PowerManager pm;
 
+    public static class Status {
+        public final boolean security;
+        public final boolean keyguard;
+        public final boolean requireUnlock;
+        public Status(
+                final boolean security,
+                final boolean keyguard,
+                final boolean requireUnlock) {
+            this.security = security;
+            this.keyguard = keyguard;
+            this.requireUnlock = requireUnlock;
+        }
+    }
     private LockMediator(Context c) {
         ctx = c;
         settings = Settings.getInstance(ctx);
@@ -53,20 +66,19 @@ public class LockMediator {
     }
 
     public void notifyStateChanged() {
-        boolean disabled = settings.get(Settings.LOCK_DISABLED);
-        boolean requireUnlock = settings.get(Settings.REQUIRE_UNLOCK);
-        Pair<Boolean, Boolean> security = isSecurityEnabled();
-        boolean newState = !security.first;
+        final boolean disabled = settings.get(Settings.LOCK_DISABLED);
+        final Status status = getLockMediatorStatus();
+        final boolean newState = !status.security;
 
         if (!dpm.isAdminActive(new ComponentName(ctx, AdminReceiver.class))) {
             Log.v(TAG, "device administrator is not active");
             return;
         }
 
-        if (security.second) {
+        if (status.keyguard) {
             ctx.stopService(new Intent(ctx, KeyguardService.class));
         } else {
-            if (!requireUnlock || disabled ||
+            if (!status.requireUnlock || disabled ||
                     (pm.isScreenOn() && !kgm.inKeyguardRestrictedInputMode())) {
                 ctx.startService(new Intent(ctx, KeyguardService.class));
             }
@@ -74,8 +86,9 @@ public class LockMediator {
 
         if (disabled != newState && CryptoUtils.isPasswordSaved(ctx)) {
 
-            if (requireUnlock && !disabled && (!pm.isScreenOn() ||
+            if (status.requireUnlock && !disabled && (!pm.isScreenOn() ||
                     kgm.inKeyguardRestrictedInputMode())) {
+                Log.v(TAG, "Unlock is required before disabling");
                 return;
             }
 
@@ -108,20 +121,17 @@ public class LockMediator {
         }
     }
 
-    /**
-     *
-     * @return Pair[lockEnabled,keyguardEnabled]
-     */
-    public Pair<Boolean, Boolean> isSecurityEnabled() {
+    public Status getLockMediatorStatus() {
         boolean disableLock = false;
         boolean disableKG = false;
+        boolean requireUnlock = false;
 
         if (!CryptoUtils.isPasswordSaved(ctx)) {
             Log.v(TAG, "password and/or hmac not set [properly]");
-            return Pair.create(!disableLock, !disableKG);
+            return new Status(!disableLock, !disableKG, false);
         }
 
-        if (!disableLock && settings.get(Settings.WIFI_CLEAR_KEYGUARD)) {
+        if (settings.get(Settings.WIFI_CLEAR_KEYGUARD)) {
             WifiManager wm = (WifiManager) ctx.getSystemService(
                     Context.WIFI_SERVICE);
             final WifiInfo current = wm.getConnectionInfo();
@@ -137,13 +147,16 @@ public class LockMediator {
                 }
                 disableKG |= settings.get(
                         network(ssid, Settings.DISABLE_KEYGUARD));
+                requireUnlock |= settings.get(
+                        network(ssid, Settings.REQUIRE_UNLOCK));
                 disableLock |= hasNetworks;
             }
         }
 
         final boolean[] _disableKG = { false };
+        final boolean[] _requireUnlock = { false };
         List<String> selectedDevices = settings.get(Settings.BLUETOOTH_DEVICES);
-        if (!disableLock && settings.get(Settings.BT_CLEAR_KEYGUARD) &&
+        if (settings.get(Settings.BT_CLEAR_KEYGUARD) &&
                 selectedDevices.size() > 0) {
             List<String> connectedDevices = settings.get(
                     Settings.BLUETOOTH_CONNECTIONS);
@@ -156,6 +169,8 @@ public class LockMediator {
                         public boolean apply(java.lang.String addr) {
                             _disableKG[0] |= settings.get(
                                     device(addr, Settings.DISABLE_KEYGUARD));
+                            _requireUnlock[0] |= settings.get(
+                                    device(addr, Settings.REQUIRE_UNLOCK));
                             return selected.contains(addr);
                         }
                     }).isPresent();
@@ -164,9 +179,10 @@ public class LockMediator {
                         connectedDevices, selectedDevices));
             }
             disableKG |= _disableKG[0];
+            requireUnlock |= _requireUnlock[0];
             disableLock |= hasDevices;
         }
-        return Pair.create(!disableLock, !disableKG);
+        return new Status(!disableLock, !disableKG, requireUnlock);
     }
 
     private long changeTime = 0;

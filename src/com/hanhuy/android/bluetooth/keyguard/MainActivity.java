@@ -101,8 +101,6 @@ public class MainActivity extends ActionBarActivity {
         setPass.setEnabled(dpm.isAdminActive(
                 new ComponentName(this, AdminReceiver.class)));
         MenuItem showNotifications = menu.findItem(R.id.show_notifications);
-        MenuItem requireUnlock = menu.findItem(R.id.require_unlock);
-        requireUnlock.setChecked(settings.get(Settings.REQUIRE_UNLOCK));
         showNotifications.setChecked(settings.get(Settings.SHOW_NOTIFICATIONS));
         return super.onCreateOptionsMenu(menu);
     }
@@ -117,12 +115,6 @@ public class MainActivity extends ActionBarActivity {
             case R.id.show_notifications: {
                 boolean value = !item.isChecked();
                 settings.set(Settings.SHOW_NOTIFICATIONS, value);
-                item.setChecked(value);
-                return true;
-            }
-            case R.id.require_unlock: {
-                boolean value = !item.isChecked();
-                settings.set(Settings.REQUIRE_UNLOCK, value);
                 item.setChecked(value);
                 return true;
             }
