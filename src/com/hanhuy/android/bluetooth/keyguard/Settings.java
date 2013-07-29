@@ -4,9 +4,12 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.List;
 
@@ -16,8 +19,7 @@ import java.util.List;
  */
 public class Settings {
     /**
-     * TODO make this a scoped by device/network setting.
-     * i.e. make this setting configurable per-device and network
+     * This setting is scoped by device() or network()
      */
     public final static Setting<Boolean> REQUIRE_UNLOCK =
             new BooleanSetting("require_unlock");
@@ -44,6 +46,8 @@ public class Settings {
             new BooleanSetting("bt_clear_keyguard");
     public final static Setting<List<String>> BLUETOOTH_CONNECTIONS =
             new StringListSetting("connected_devices");
+    public final static Setting<Long> LAST_STATE_CHANGE =
+            new LongSetting("last_state_change", 0l);
     private static final String TAG = "Settings";
 
     private final Gson gson = new Gson();
@@ -62,13 +66,22 @@ public class Settings {
         public abstract Setting<T> prefix(String prefix);
     }
 
-    public static class StringSetting extends Setting<String> {
+    private static class LongSetting extends Setting<Long> {
+        public LongSetting(String key) { super(key, null); }
+        public LongSetting(String key, Long defaultValue) {
+            super(key, defaultValue);
+        }
+        public LongSetting prefix(String prefix) {
+            return new LongSetting(prefix + "." + key);
+        }
+    }
+    private static class StringSetting extends Setting<String> {
         public StringSetting(String key) { super(key, null); }
         public StringSetting prefix(String prefix) {
             return new StringSetting(prefix + "." + key);
         }
     }
-    public static class BooleanSetting extends Setting<Boolean> {
+    private static class BooleanSetting extends Setting<Boolean> {
         public BooleanSetting(String key) { this(key, false); }
         public BooleanSetting(String key, boolean defaultValue) {
             super(key, defaultValue);
@@ -78,7 +91,7 @@ public class Settings {
         }
     }
 
-    public static class StringListSetting extends Setting<List<String>> {
+    private static class StringListSetting extends Setting<List<String>> {
         @SuppressWarnings("unchecked")
         public StringListSetting(String key) {
             super(key, Collections.EMPTY_LIST);
@@ -95,6 +108,9 @@ public class Settings {
          prefs = PreferenceManager.getDefaultSharedPreferences(c);
     }
 
+    @VisibleForTesting
+    Settings() { }
+
     public static Settings getInstance(Context c) {
         if (instance == null)
             instance = new Settings(c.getApplicationContext());
@@ -104,11 +120,14 @@ public class Settings {
     @SuppressWarnings("unchecked")
     public <T> void set(Setting<T> setting, T value) {
         SharedPreferences.Editor editor = prefs.edit();
-        if (setting instanceof StringSetting) {
+        Class<T> settingType = getTypeOf(setting);
+        if (settingType == String.class) {
             editor.putString(setting.key, (String) value);
-        } else if (setting instanceof BooleanSetting) {
+        } else if (settingType == Boolean.class) {
             editor.putBoolean(setting.key, (Boolean) value);
-        } else if (setting instanceof StringListSetting) {
+        } else if (settingType == Long.class) {
+            editor.putLong(setting.key, (Long) value);
+        } else if (settingType == List.class) {
             List<String> values = (List<String>) value;
             String json = gson.toJson(values);
             editor.putString(setting.key, json);
@@ -119,14 +138,31 @@ public class Settings {
     }
 
     @SuppressWarnings("unchecked")
+    public <T> Class<T> getTypeOf(Setting<T> setting) {
+        Type sup = setting.getClass().getGenericSuperclass();
+        ParameterizedType type = (ParameterizedType) sup;
+        Type[] args = type.getActualTypeArguments();
+        if (args[0] instanceof ParameterizedType) {
+            ParameterizedType pt = (ParameterizedType) args[0];
+            return (Class<T>) pt.getRawType();
+        } else {
+            return (Class<T>) args[0];
+        }
+    }
+
+    @SuppressWarnings("unchecked")
     public <T> T get(Setting<T> setting) {
         T defaultValue = setting.defaultValue;
-        if (setting instanceof StringSetting) {
+        Class<T> settingType = getTypeOf(setting);
+        if (settingType == String.class) {
             return (T) prefs.getString(setting.key, (String) defaultValue);
-        } else if (setting instanceof BooleanSetting) {
+        } else if (settingType == Boolean.class) {
             return (T) Boolean.valueOf(prefs.getBoolean(setting.key,
                     defaultValue == null ? false : (Boolean) defaultValue));
-        } else if (setting instanceof StringListSetting) {
+        } else if (settingType == Long.class) {
+            return (T) Long.valueOf(prefs.getLong(setting.key,
+                    defaultValue == null ? 0 : (Long) defaultValue));
+        } else if (settingType == List.class) {
             String json = prefs.getString(setting.key, null);
             if (json == null) {
                 return (T) Collections.EMPTY_LIST;

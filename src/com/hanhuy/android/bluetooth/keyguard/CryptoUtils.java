@@ -1,11 +1,13 @@
 package com.hanhuy.android.bluetooth.keyguard;
 
 import android.content.Context;
+import android.util.Log;
 import com.google.common.io.BaseEncoding;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
@@ -45,6 +47,7 @@ public class CryptoUtils {
 
     public static synchronized String hmac(String input) {
         try {
+            if (input == null) return null;
             byte[] digest = SHA1.digest(input.getBytes("utf-8"));
             return BASE16.encode(digest);
         } catch (UnsupportedEncodingException e) {
@@ -55,8 +58,12 @@ public class CryptoUtils {
     public static String encrypt(String input) {
         try {
             Cipher c = Cipher.getInstance(CIPHER_ALG);
-            c.init(Cipher.ENCRYPT_MODE, KEY, new SecureRandom());
-            return BASE16.encode(c.getParameters().getEncoded()) + ":" +
+            SecureRandom r = new SecureRandom();
+            byte[] iv = new byte[16];
+            r.nextBytes(iv);
+            IvParameterSpec ivspec = new IvParameterSpec(iv);
+            c.init(Cipher.ENCRYPT_MODE, KEY, ivspec, r);
+            return BASE16.encode(iv) + ":" +
                     BASE16.encode(c.doFinal(input.getBytes("utf-8")));
         } catch (IOException e) {
             throw new IllegalStateException(e);
@@ -73,15 +80,13 @@ public class CryptoUtils {
 
             byte[] params = BASE16.decode(inp[0]);
             byte[] encrypted = BASE16.decode(inp[1]);
-            AlgorithmParameters p = AlgorithmParameters.getInstance(ALG);
-            p.init(params);
+            IvParameterSpec ivspec = new IvParameterSpec(params);
             Cipher c = Cipher.getInstance(CIPHER_ALG);
-            c.init(Cipher.DECRYPT_MODE, KEY, p);
+            c.init(Cipher.DECRYPT_MODE, KEY, ivspec);
             return new String(c.doFinal(encrypted));
         } catch (GeneralSecurityException e) {
-            throw new IllegalStateException(e);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
+            Log.e(TAG, "Failed to decrypt", e);
+            return null;
         }
     }
 
@@ -117,7 +122,7 @@ public class CryptoUtils {
         String hash = s.get(Settings.PASSWORD_HASH);
         if (saved != null && hash != null) {
             String pass = decrypt(saved);
-            isSaved = hmac(pass).equals(hash);
+            isSaved = pass != null && hmac(pass).equals(hash);
         }
         return isSaved;
     }
