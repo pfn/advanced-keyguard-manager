@@ -3,13 +3,11 @@ package com.hanhuy.android.bluetooth.keyguard;
 import android.app.NotificationManager;
 import android.app.admin.DevicePolicyManager;
 import android.content.*;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
-import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -24,12 +22,8 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         settings = Settings.getInstance(this);
         setContentView(R.layout.main);
-        DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        float wdp = metrics.widthPixels / metrics.scaledDensity;
-        float hdp = metrics.heightPixels / metrics.scaledDensity;
 
-        if (Math.min(hdp, wdp) < 600) {
+        if (!getResources().getBoolean(R.bool.is_tablet)) {
             ViewPager pager = (ViewPager) findViewById(R.id.pager);
             pager.setAdapter(new PagerAdapter());
         }
