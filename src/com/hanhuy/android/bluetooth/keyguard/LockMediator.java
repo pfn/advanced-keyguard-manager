@@ -139,16 +139,25 @@ public class LockMediator {
 
             if (current != null) {
                 String ssid = current.getSSID();
-                boolean hasNetworks = Sets.newHashSet(
-                        selectedAPs).contains(ssid);
+                Set<String> selected = Sets.newHashSet(selectedAPs);
+                String altSSID = ssid.charAt(0) != '"' ?
+                        "\"" + ssid + "\"" : null;
+                boolean hasNetworks = selected.contains(ssid) ||
+                        (altSSID != null && selected.contains(altSSID));
                 if (hasNetworks) {
-                    Log.v(TAG, String.format( "Found networks: %s in %s",
+                    Log.v(TAG, String.format("Found networks: %s in %s",
                             current.getSSID(), selectedAPs));
                 }
                 disableKG |= settings.get(
-                        network(ssid, Settings.DISABLE_KEYGUARD));
+                        network(ssid, Settings.DISABLE_KEYGUARD)) ||
+                        (altSSID != null &&
+                                settings.get(network(
+                                        altSSID, Settings.DISABLE_KEYGUARD)));
                 requireUnlock |= settings.get(
-                        network(ssid, Settings.REQUIRE_UNLOCK));
+                        network(ssid, Settings.REQUIRE_UNLOCK)) ||
+                        (altSSID != null &&
+                                settings.get(network(
+                                        altSSID, Settings.REQUIRE_UNLOCK)));
                 disableLock |= hasNetworks;
             }
         }
