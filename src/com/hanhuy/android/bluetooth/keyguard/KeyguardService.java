@@ -47,15 +47,16 @@ public class KeyguardService extends Service {
         @Override
         @SuppressWarnings("deprecation")
         public void onReceive(Context context, Intent intent) {
-            if (ACTION_PING.equals(intent.getAction())) {
-                sendBroadcast(new Intent(ACTION_PONG));
-            } else if (Intent.ACTION_SCREEN_ON.equals(intent.getAction())) {
-                if (kgm.inKeyguardRestrictedInputMode()) {
-                    kgml.reenableKeyguard();
-                    kgml = kgm.newKeyguardLock(TAG);
-                }
+        if (ACTION_PING.equals(intent.getAction())) {
+            sendBroadcast(new Intent(ACTION_PONG));
+        }/* else if (Intent.ACTION_SCREEN_ON.equals(intent.getAction())) {
+            if (kgm.inKeyguardRestrictedInputMode()) {
+                kgml.reenableKeyguard();
+                kgml = kgm.newKeyguardLock(TAG);
             }
-            kgml.disableKeyguard();
+        }
+        kgml.disableKeyguard();
+        */
         }
     };
 
