@@ -195,7 +195,7 @@ public class WifiFragment extends Fragment {
                             v.setCompoundDrawablesWithIntrinsicBounds(
                                     drawableLeft, 0, 0, 0);
                             if (current != null &&
-                                    current.getSSID().equals(_ssid)) {
+                                    _ssid.equals(current.getSSID())) {
                                 v.setTextColor(0xff00aa00);
                             }
                             v.setText(ssid);

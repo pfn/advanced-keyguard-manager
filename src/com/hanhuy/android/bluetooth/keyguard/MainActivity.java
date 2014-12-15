@@ -1,15 +1,24 @@
 package com.hanhuy.android.bluetooth.keyguard;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.NotificationManager;
 import android.app.admin.DevicePolicyManager;
 import android.content.*;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+import org.acra.ACRA;
 
 public class MainActivity extends ActionBarActivity {
     private final static int DIALOG_NO_PAIRED_DEVICES = 0;
@@ -118,6 +127,49 @@ public class MainActivity extends ActionBarActivity {
                 boolean value = !item.isChecked();
                 settings.set(Settings.SHOW_NOTIFICATIONS, value);
                 item.setChecked(value);
+                return true;
+            }
+            case R.id.submit_log: {
+                AlertDialog.Builder b = new AlertDialog.Builder(this);
+                b.setTitle("Submit debug logs");
+                b.setMessage("Add details about this log");
+                final EditText edit = new EditText(this);
+                b.setView(edit);
+                b.setPositiveButton("Send", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+
+                                Toast.makeText(MainActivity.this, "Debug log sent", Toast.LENGTH_SHORT).show();
+                                Exception e = new Exception("User submitted log: " + edit.getText());
+                                e.setStackTrace(new StackTraceElement[] {
+                                        new StackTraceElement(Build.BRAND,
+                                                Build.MODEL,
+                                                Build.PRODUCT,
+                                                (int) (System.currentTimeMillis() / 1000))
+                                });
+                                ACRA.getErrorReporter().handleSilentException(e);
+                            }
+                        }
+                );
+                b.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int i) {
+                        d.dismiss();
+                    }
+                });
+                AlertDialog d = b.show();
+                final Button button = d.getButton(DialogInterface.BUTTON_POSITIVE);
+                button.setEnabled(false);
+                edit.addTextChangedListener(new TextWatcher() {
+                    @Override public void afterTextChanged(Editable p1) {}
+                    @Override public void beforeTextChanged(CharSequence p1, int p2, int p3, int p4) { }
+
+                    @Override public void onTextChanged(CharSequence p1,
+                                                        int p2, int p3, int p4) {
+                        button.setEnabled(p1.length() > 0);
+                    }
+
+                });
                 return true;
             }
         }

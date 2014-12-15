@@ -3,6 +3,7 @@
     <string name="app_name">Advanced Keyguard Manager</string>
     <string name="notif_title">Lock Manager</string>
     <string name="pair">Pair</string>
+    <string name="disabler_running">Keyguard is disabled</string>
     <string name="bt_unlock_instructions">
         Select paired devices that will disable lock screen security
         while connected. Long-press an item to set additional options while

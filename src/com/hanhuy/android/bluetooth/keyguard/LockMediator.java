@@ -13,8 +13,8 @@ import android.net.wifi.WifiManager;
 import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import android.util.Pair;
 import com.google.common.base.Predicate;
+import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
@@ -68,7 +68,7 @@ public class LockMediator {
     public void notifyStateChanged() {
         final boolean disabled = settings.get(Settings.LOCK_DISABLED);
         final Status status = getLockMediatorStatus();
-        final boolean newState = !status.security;
+        final boolean shouldDisable = !status.security;
 
         if (!dpm.isAdminActive(new ComponentName(ctx, AdminReceiver.class))) {
             Log.v(TAG, "device administrator is not active");
@@ -84,7 +84,7 @@ public class LockMediator {
             }
         }
 
-        if (disabled != newState && CryptoUtils.isPasswordSaved(ctx)) {
+        if (disabled != shouldDisable && CryptoUtils.isPasswordSaved(ctx)) {
 
             if (status.requireUnlock && !disabled && (!pm.isScreenOn() ||
                     kgm.inKeyguardRestrictedInputMode())) {
@@ -92,16 +92,16 @@ public class LockMediator {
                 return;
             }
 
-            Log.v(TAG, "toggling lock screen state: " + !newState);
-            settings.set(Settings.LOCK_DISABLED, newState);
+            Log.v(TAG, "disabling lock screen: " + !shouldDisable);
+            settings.set(Settings.LOCK_DISABLED, shouldDisable);
             updatePasswordSetTime();
 
-            dpm.resetPassword(newState ? "" : CryptoUtils.getPassword(ctx), 0);
+            dpm.resetPassword(shouldDisable ? "" : CryptoUtils.getPassword(ctx), 0);
 
             if (settings.get(Settings.SHOW_NOTIFICATIONS)) {
                 PendingIntent pending = PendingIntent.getActivity(
                         ctx, 0, new Intent(ctx, MainActivity.class), 0);
-                String text = ctx.getString(newState ?
+                String text = ctx.getString(shouldDisable ?
                         R.string.lockscreen_disabled :
                         R.string.lockscreen_enabled);
                 Notification n = new NotificationCompat.Builder(ctx)
@@ -139,26 +139,28 @@ public class LockMediator {
 
             if (current != null) {
                 String ssid = current.getSSID();
-                Set<String> selected = Sets.newHashSet(selectedAPs);
-                String altSSID = ssid.charAt(0) != '"' ?
-                        "\"" + ssid + "\"" : null;
-                boolean hasNetworks = selected.contains(ssid) ||
-                        (altSSID != null && selected.contains(altSSID));
-                if (hasNetworks) {
-                    Log.v(TAG, String.format("Found networks: %s in %s",
-                            current.getSSID(), selectedAPs));
+                if (ssid != null) {
+                    Set<String> selected = Sets.newHashSet(selectedAPs);
+                    String altSSID = !Strings.isNullOrEmpty(ssid) &&
+                            ssid.charAt(0) != '"' ? "\"" + ssid + "\"" : null;
+                    boolean hasNetworks = selected.contains(ssid) ||
+                            (altSSID != null && selected.contains(altSSID));
+                    if (hasNetworks) {
+                        Log.v(TAG, String.format("Found networks: %s in %s",
+                                current.getSSID(), selectedAPs));
+                    }
+                    disableKG |= settings.get(
+                            network(ssid, Settings.DISABLE_KEYGUARD)) ||
+                            (altSSID != null &&
+                                    settings.get(network(altSSID,
+                                            Settings.DISABLE_KEYGUARD)));
+                    requireUnlock |= settings.get(
+                            network(ssid, Settings.REQUIRE_UNLOCK)) ||
+                            (altSSID != null &&
+                                    settings.get(network(altSSID,
+                                            Settings.REQUIRE_UNLOCK)));
+                    disableLock |= hasNetworks;
                 }
-                disableKG |= settings.get(
-                        network(ssid, Settings.DISABLE_KEYGUARD)) ||
-                        (altSSID != null &&
-                                settings.get(network(
-                                        altSSID, Settings.DISABLE_KEYGUARD)));
-                requireUnlock |= settings.get(
-                        network(ssid, Settings.REQUIRE_UNLOCK)) ||
-                        (altSSID != null &&
-                                settings.get(network(
-                                        altSSID, Settings.REQUIRE_UNLOCK)));
-                disableLock |= hasNetworks;
             }
         }
 

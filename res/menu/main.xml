@@ -13,4 +13,8 @@
         android:title="@string/show_notifications"
         android:checkable="true"
         />
+    <item android:id="@+id/submit_log"
+          android:showAsAction="never"
+          android:title="Submit Debug Log"
+          />
 </menu>
